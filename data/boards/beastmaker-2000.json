@@ -1,0 +1,710 @@
+{
+  "id": "beastmaker-2000",
+  "name": "Beastmaker 2000 Series",
+  "sources": [
+    {
+      "id": "s1",
+      "url": "https://upandunder.co.uk/beastmaker-beastmaker-2000-series",
+      "title": "Up & Under - Beastmaker 2000 (홀드 구성, 치수)"
+    },
+    {
+      "id": "s2",
+      "url": "https://www.outdoorgearlab.com/reviews/climbing/hangboard/beastmaker-2000",
+      "title": "OutdoorGearLab - Beastmaker 2000 review (인치 단위 홀드 설명, 슬로퍼 각도 실측)"
+    },
+    {
+      "id": "s3",
+      "url": "https://thehangboard.com/pages/beastmaker-1000-vs-2000",
+      "title": "The Hangboard - Beastmaker 1000 vs 2000 edge sizes (mm 목록, 경쟁사 자료)"
+    },
+    {
+      "id": "s4",
+      "url": "local:photo/beastmaker2000.jpg",
+      "title": "사용자 촬영 사진 (행별 개수·배치)"
+    }
+  ],
+  "holds": [
+    {
+      "id": "bm2000-r1-01",
+      "row": 1,
+      "order": 1,
+      "type": "pocket",
+      "fingers": 3,
+      "depthMm": null,
+      "slopeDeg": null,
+      "mirrorOf": null,
+      "label": "3 finger pocket",
+      "sourceIds": [
+        "s1",
+        "s2",
+        "s3",
+        "s4"
+      ],
+      "confidence": "photo-estimate",
+      "note": "후보 2개: 약 38~40mm(medium 3F, OGL 1 1/2in, s3 40mm), 약 19~20mm(smaller 3F, OGL 3/4in, s3 20mm). 좌우 어느 쪽인지 불명. 두 홀드 깊이가 서로 다름.",
+      "shape": {
+        "x": 224.5,
+        "y": 9.1,
+        "w": 55.0,
+        "h": 21.4
+      }
+    },
+    {
+      "id": "bm2000-r1-02",
+      "row": 1,
+      "order": 2,
+      "type": "pocket",
+      "fingers": 3,
+      "depthMm": null,
+      "slopeDeg": null,
+      "mirrorOf": null,
+      "label": "3 finger pocket",
+      "sourceIds": [
+        "s1",
+        "s2",
+        "s3",
+        "s4"
+      ],
+      "confidence": "photo-estimate",
+      "note": "위와 동일. 좌우 비대칭 쌍.",
+      "shape": {
+        "x": 300.5,
+        "y": 9.1,
+        "w": 55.0,
+        "h": 21.4
+      }
+    },
+    {
+      "id": "bm2000-r2-01",
+      "row": 2,
+      "order": 1,
+      "type": "edge",
+      "fingers": 4,
+      "depthMm": null,
+      "slopeDeg": null,
+      "mirrorOf": "bm2000-r2-09",
+      "label": "4 finger edge (outer)",
+      "sourceIds": [
+        "s1",
+        "s2",
+        "s3",
+        "s4"
+      ],
+      "confidence": "photo-estimate",
+      "note": "외곽 4F 후보: 약 32~33mm(OGL 1 1/4in, s3 33mm)와 약 13~15mm(OGL 1/2in, s3 15mm); 위/아래 행 중 어느 쪽인지 불명. 공식 명칭 big/little/incut rungs.",
+      "shape": {
+        "x": 9.9,
+        "y": 36.9,
+        "w": 81.2,
+        "h": 23.6
+      }
+    },
+    {
+      "id": "bm2000-r2-02",
+      "row": 2,
+      "order": 2,
+      "type": "pocket",
+      "fingers": 1,
+      "depthMm": null,
+      "slopeDeg": null,
+      "mirrorOf": "bm2000-r2-08",
+      "label": "mono",
+      "sourceIds": [
+        "s1",
+        "s2",
+        "s3",
+        "s4"
+      ],
+      "confidence": "photo-estimate",
+      "note": "mono 4개 구멍(사진). 리테일러: sloping monos/pad monos, s3: 55mm와 25mm. OGL은 mono 3개로 서술해 개수 불일치. 행 대응 불명.",
+      "shape": {
+        "x": 100.4,
+        "y": 36.9,
+        "w": 22.8,
+        "h": 23.6
+      }
+    },
+    {
+      "id": "bm2000-r2-03",
+      "row": 2,
+      "order": 3,
+      "type": "pocket",
+      "fingers": 2,
+      "depthMm": null,
+      "slopeDeg": null,
+      "mirrorOf": "bm2000-r2-07",
+      "label": "2 finger pocket",
+      "sourceIds": [
+        "s1",
+        "s2",
+        "s3",
+        "s4"
+      ],
+      "confidence": "photo-estimate",
+      "note": "2F 후보 깊이(OGL): 1 1/4in, 1in, 3/4in, 경사진 7/8in 등 4쌍(원문 일부 불명확), s3: 20~35mm. 위치 대응 불명. 사진·정면 이미지에서 이 위치에 옆 구멍(1손가락)이 있음(OGL: 가장 깊은 2F에 offset hole).",
+      "shape": {
+        "x": 132.2,
+        "y": 36.9,
+        "w": 46.6,
+        "h": 23.6
+      }
+    },
+    {
+      "id": "bm2000-r2-04",
+      "row": 2,
+      "order": 4,
+      "type": "pocket",
+      "fingers": 2,
+      "depthMm": null,
+      "slopeDeg": null,
+      "mirrorOf": "bm2000-r2-06",
+      "label": "2 finger pocket",
+      "sourceIds": [
+        "s1",
+        "s2",
+        "s3",
+        "s4"
+      ],
+      "confidence": "photo-estimate",
+      "note": "2F 후보 깊이(OGL): 1 1/4in, 1in, 3/4in, 경사진 7/8in 등 4쌍(원문 일부 불명확), s3: 20~35mm. 위치 대응 불명.",
+      "shape": {
+        "x": 190.8,
+        "y": 36.9,
+        "w": 45.2,
+        "h": 23.6
+      }
+    },
+    {
+      "id": "bm2000-r2-05",
+      "row": 2,
+      "order": 5,
+      "type": "edge",
+      "fingers": 4,
+      "depthMm": null,
+      "slopeDeg": null,
+      "mirrorOf": null,
+      "label": "4 finger edge (center)",
+      "sourceIds": [
+        "s1",
+        "s2",
+        "s3",
+        "s4"
+      ],
+      "confidence": "photo-estimate",
+      "note": "중앙 4F 후보: 약 50mm(OGL 2in, s3 50mm)와 약 22~25mm(OGL 1in, 공식 middle edge 22mm는 s3 인용). 행 대응 불명.",
+      "shape": {
+        "x": 249.7,
+        "y": 36.9,
+        "w": 80.7,
+        "h": 23.6
+      }
+    },
+    {
+      "id": "bm2000-r2-06",
+      "row": 2,
+      "order": 6,
+      "type": "pocket",
+      "fingers": 2,
+      "depthMm": null,
+      "slopeDeg": null,
+      "mirrorOf": "bm2000-r2-04",
+      "label": "2 finger pocket",
+      "sourceIds": [
+        "s1",
+        "s2",
+        "s3",
+        "s4"
+      ],
+      "confidence": "photo-estimate",
+      "note": "2F 후보 깊이(OGL): 1 1/4in, 1in, 3/4in, 경사진 7/8in 등 4쌍(원문 일부 불명확), s3: 20~35mm. 위치 대응 불명.",
+      "shape": {
+        "x": 344.0,
+        "y": 36.9,
+        "w": 45.2,
+        "h": 23.6
+      }
+    },
+    {
+      "id": "bm2000-r2-07",
+      "row": 2,
+      "order": 7,
+      "type": "pocket",
+      "fingers": 2,
+      "depthMm": null,
+      "slopeDeg": null,
+      "mirrorOf": "bm2000-r2-03",
+      "label": "2 finger pocket",
+      "sourceIds": [
+        "s1",
+        "s2",
+        "s3",
+        "s4"
+      ],
+      "confidence": "photo-estimate",
+      "note": "2F 후보 깊이(OGL): 1 1/4in, 1in, 3/4in, 경사진 7/8in 등 4쌍(원문 일부 불명확), s3: 20~35mm. 위치 대응 불명. 사진·정면 이미지에서 이 위치에 옆 구멍(1손가락)이 있음(OGL: 가장 깊은 2F에 offset hole).",
+      "shape": {
+        "x": 401.2,
+        "y": 36.9,
+        "w": 46.6,
+        "h": 23.6
+      }
+    },
+    {
+      "id": "bm2000-r2-08",
+      "row": 2,
+      "order": 8,
+      "type": "pocket",
+      "fingers": 1,
+      "depthMm": null,
+      "slopeDeg": null,
+      "mirrorOf": "bm2000-r2-02",
+      "label": "mono",
+      "sourceIds": [
+        "s1",
+        "s2",
+        "s3",
+        "s4"
+      ],
+      "confidence": "photo-estimate",
+      "note": "mono 4개 구멍(사진). 리테일러: sloping monos/pad monos, s3: 55mm와 25mm. OGL은 mono 3개로 서술해 개수 불일치. 행 대응 불명.",
+      "shape": {
+        "x": 456.8,
+        "y": 36.9,
+        "w": 22.8,
+        "h": 23.6
+      }
+    },
+    {
+      "id": "bm2000-r2-09",
+      "row": 2,
+      "order": 9,
+      "type": "edge",
+      "fingers": 4,
+      "depthMm": null,
+      "slopeDeg": null,
+      "mirrorOf": "bm2000-r2-01",
+      "label": "4 finger edge (outer)",
+      "sourceIds": [
+        "s1",
+        "s2",
+        "s3",
+        "s4"
+      ],
+      "confidence": "photo-estimate",
+      "note": "외곽 4F 후보: 약 32~33mm(OGL 1 1/4in, s3 33mm)와 약 13~15mm(OGL 1/2in, s3 15mm); 위/아래 행 중 어느 쪽인지 불명. 공식 명칭 big/little/incut rungs.",
+      "shape": {
+        "x": 488.9,
+        "y": 36.9,
+        "w": 81.2,
+        "h": 23.6
+      }
+    },
+    {
+      "id": "bm2000-r3-01",
+      "row": 3,
+      "order": 1,
+      "type": "edge",
+      "fingers": 4,
+      "depthMm": null,
+      "slopeDeg": null,
+      "mirrorOf": "bm2000-r3-09",
+      "label": "4 finger edge (outer)",
+      "sourceIds": [
+        "s1",
+        "s2",
+        "s3",
+        "s4"
+      ],
+      "confidence": "photo-estimate",
+      "note": "외곽 4F 후보: 약 32~33mm(OGL 1 1/4in, s3 33mm)와 약 13~15mm(OGL 1/2in, s3 15mm); 위/아래 행 중 어느 쪽인지 불명. 공식 명칭 big/little/incut rungs.",
+      "shape": {
+        "x": 15.9,
+        "y": 88.3,
+        "w": 80.5,
+        "h": 24.6
+      }
+    },
+    {
+      "id": "bm2000-r3-02",
+      "row": 3,
+      "order": 2,
+      "type": "pocket",
+      "fingers": 1,
+      "depthMm": null,
+      "slopeDeg": null,
+      "mirrorOf": "bm2000-r3-08",
+      "label": "mono",
+      "sourceIds": [
+        "s1",
+        "s2",
+        "s3",
+        "s4"
+      ],
+      "confidence": "photo-estimate",
+      "note": "mono 4개 구멍(사진). 리테일러: sloping monos/pad monos, s3: 55mm와 25mm. OGL은 mono 3개로 서술해 개수 불일치. 행 대응 불명.",
+      "shape": {
+        "x": 102.9,
+        "y": 88.3,
+        "w": 22.5,
+        "h": 24.6
+      }
+    },
+    {
+      "id": "bm2000-r3-03",
+      "row": 3,
+      "order": 3,
+      "type": "pocket",
+      "fingers": 2,
+      "depthMm": null,
+      "slopeDeg": null,
+      "mirrorOf": "bm2000-r3-07",
+      "label": "2 finger pocket",
+      "sourceIds": [
+        "s1",
+        "s2",
+        "s3",
+        "s4"
+      ],
+      "confidence": "photo-estimate",
+      "note": "2F 후보 깊이(OGL): 1 1/4in, 1in, 3/4in, 경사진 7/8in 등 4쌍(원문 일부 불명확), s3: 20~35mm. 위치 대응 불명.",
+      "shape": {
+        "x": 134.3,
+        "y": 88.3,
+        "w": 46.6,
+        "h": 24.6
+      }
+    },
+    {
+      "id": "bm2000-r3-04",
+      "row": 3,
+      "order": 4,
+      "type": "pocket",
+      "fingers": 2,
+      "depthMm": null,
+      "slopeDeg": null,
+      "mirrorOf": "bm2000-r3-06",
+      "label": "2 finger pocket",
+      "sourceIds": [
+        "s1",
+        "s2",
+        "s3",
+        "s4"
+      ],
+      "confidence": "photo-estimate",
+      "note": "2F 후보 깊이(OGL): 1 1/4in, 1in, 3/4in, 경사진 7/8in 등 4쌍(원문 일부 불명확), s3: 20~35mm. 위치 대응 불명.",
+      "shape": {
+        "x": 188.3,
+        "y": 88.3,
+        "w": 44.7,
+        "h": 24.6
+      }
+    },
+    {
+      "id": "bm2000-r3-05",
+      "row": 3,
+      "order": 5,
+      "type": "edge",
+      "fingers": 4,
+      "depthMm": null,
+      "slopeDeg": null,
+      "mirrorOf": null,
+      "label": "4 finger edge (center)",
+      "sourceIds": [
+        "s1",
+        "s2",
+        "s3",
+        "s4"
+      ],
+      "confidence": "photo-estimate",
+      "note": "중앙 4F 후보: 약 50mm(OGL 2in, s3 50mm)와 약 22~25mm(OGL 1in, 공식 middle edge 22mm는 s3 인용). 행 대응 불명.",
+      "shape": {
+        "x": 242.1,
+        "y": 88.3,
+        "w": 95.8,
+        "h": 24.6
+      }
+    },
+    {
+      "id": "bm2000-r3-06",
+      "row": 3,
+      "order": 6,
+      "type": "pocket",
+      "fingers": 2,
+      "depthMm": null,
+      "slopeDeg": null,
+      "mirrorOf": "bm2000-r3-04",
+      "label": "2 finger pocket",
+      "sourceIds": [
+        "s1",
+        "s2",
+        "s3",
+        "s4"
+      ],
+      "confidence": "photo-estimate",
+      "note": "2F 후보 깊이(OGL): 1 1/4in, 1in, 3/4in, 경사진 7/8in 등 4쌍(원문 일부 불명확), s3: 20~35mm. 위치 대응 불명.",
+      "shape": {
+        "x": 346.9,
+        "y": 88.3,
+        "w": 44.7,
+        "h": 24.6
+      }
+    },
+    {
+      "id": "bm2000-r3-07",
+      "row": 3,
+      "order": 7,
+      "type": "pocket",
+      "fingers": 2,
+      "depthMm": null,
+      "slopeDeg": null,
+      "mirrorOf": "bm2000-r3-03",
+      "label": "2 finger pocket",
+      "sourceIds": [
+        "s1",
+        "s2",
+        "s3",
+        "s4"
+      ],
+      "confidence": "photo-estimate",
+      "note": "2F 후보 깊이(OGL): 1 1/4in, 1in, 3/4in, 경사진 7/8in 등 4쌍(원문 일부 불명확), s3: 20~35mm. 위치 대응 불명.",
+      "shape": {
+        "x": 399.1,
+        "y": 88.3,
+        "w": 46.6,
+        "h": 24.6
+      }
+    },
+    {
+      "id": "bm2000-r3-08",
+      "row": 3,
+      "order": 8,
+      "type": "pocket",
+      "fingers": 1,
+      "depthMm": null,
+      "slopeDeg": null,
+      "mirrorOf": "bm2000-r3-02",
+      "label": "mono",
+      "sourceIds": [
+        "s1",
+        "s2",
+        "s3",
+        "s4"
+      ],
+      "confidence": "photo-estimate",
+      "note": "mono 4개 구멍(사진). 리테일러: sloping monos/pad monos, s3: 55mm와 25mm. OGL은 mono 3개로 서술해 개수 불일치. 행 대응 불명.",
+      "shape": {
+        "x": 454.6,
+        "y": 88.3,
+        "w": 22.5,
+        "h": 24.6
+      }
+    },
+    {
+      "id": "bm2000-r3-09",
+      "row": 3,
+      "order": 9,
+      "type": "edge",
+      "fingers": 4,
+      "depthMm": null,
+      "slopeDeg": null,
+      "mirrorOf": "bm2000-r3-01",
+      "label": "4 finger edge (outer)",
+      "sourceIds": [
+        "s1",
+        "s2",
+        "s3",
+        "s4"
+      ],
+      "confidence": "photo-estimate",
+      "note": "외곽 4F 후보: 약 32~33mm(OGL 1 1/4in, s3 33mm)와 약 13~15mm(OGL 1/2in, s3 15mm); 위/아래 행 중 어느 쪽인지 불명. 공식 명칭 big/little/incut rungs.",
+      "shape": {
+        "x": 483.5,
+        "y": 88.3,
+        "w": 80.5,
+        "h": 24.6
+      }
+    },
+    {
+      "id": "bm2000-r4-01",
+      "row": 4,
+      "order": 1,
+      "type": "sloper",
+      "fingers": null,
+      "depthMm": null,
+      "slopeDeg": 45,
+      "mirrorOf": "bm2000-r4-06",
+      "label": "45 degree sloper",
+      "sourceIds": [
+        "s1",
+        "s2",
+        "s3"
+      ],
+      "confidence": "retailer",
+      "note": "사진에 보이지 않는 면. 개수는 리테일러 목록(45/35/20 각 2개), OGL 실측 42/33/19도(가운데가 가장 완만). 좌우 배치는 미확인 추정(바깥 45, 중앙 20). OGL 실측 42도.",
+      "shape": {
+        "x": 10,
+        "y": -23.0,
+        "w": 62,
+        "h": 16.0
+      }
+    },
+    {
+      "id": "bm2000-r4-02",
+      "row": 4,
+      "order": 2,
+      "type": "sloper",
+      "fingers": null,
+      "depthMm": null,
+      "slopeDeg": 35,
+      "mirrorOf": "bm2000-r4-05",
+      "label": "35 degree sloper",
+      "sourceIds": [
+        "s1",
+        "s2",
+        "s3"
+      ],
+      "confidence": "retailer",
+      "note": "사진에 보이지 않는 면. 개수는 리테일러 목록(45/35/20 각 2개), OGL 실측 42/33/19도(가운데가 가장 완만). 좌우 배치는 미확인 추정(바깥 45, 중앙 20). OGL 실측 33도.",
+      "shape": {
+        "x": 78,
+        "y": -23.0,
+        "w": 62,
+        "h": 16.0
+      }
+    },
+    {
+      "id": "bm2000-r4-03",
+      "row": 4,
+      "order": 3,
+      "type": "sloper",
+      "fingers": null,
+      "depthMm": null,
+      "slopeDeg": 20,
+      "mirrorOf": "bm2000-r4-04",
+      "label": "20 degree sloper",
+      "sourceIds": [
+        "s1",
+        "s2",
+        "s3"
+      ],
+      "confidence": "retailer",
+      "note": "사진에 보이지 않는 면. 개수는 리테일러 목록(45/35/20 각 2개), OGL 실측 42/33/19도(가운데가 가장 완만). 좌우 배치는 미확인 추정(바깥 45, 중앙 20). OGL 실측 19도.",
+      "shape": {
+        "x": 146,
+        "y": -23.0,
+        "w": 56,
+        "h": 16.0
+      }
+    },
+    {
+      "id": "bm2000-r4-04",
+      "row": 4,
+      "order": 4,
+      "type": "sloper",
+      "fingers": null,
+      "depthMm": null,
+      "slopeDeg": 20,
+      "mirrorOf": "bm2000-r4-03",
+      "label": "20 degree sloper",
+      "sourceIds": [
+        "s1",
+        "s2",
+        "s3"
+      ],
+      "confidence": "retailer",
+      "note": "사진에 보이지 않는 면. 개수는 리테일러 목록(45/35/20 각 2개), OGL 실측 42/33/19도(가운데가 가장 완만). 좌우 배치는 미확인 추정(바깥 45, 중앙 20). OGL 실측 19도.",
+      "shape": {
+        "x": 378,
+        "y": -23.0,
+        "w": 56,
+        "h": 16.0
+      }
+    },
+    {
+      "id": "bm2000-r4-05",
+      "row": 4,
+      "order": 5,
+      "type": "sloper",
+      "fingers": null,
+      "depthMm": null,
+      "slopeDeg": 35,
+      "mirrorOf": "bm2000-r4-02",
+      "label": "35 degree sloper",
+      "sourceIds": [
+        "s1",
+        "s2",
+        "s3"
+      ],
+      "confidence": "retailer",
+      "note": "사진에 보이지 않는 면. 개수는 리테일러 목록(45/35/20 각 2개), OGL 실측 42/33/19도(가운데가 가장 완만). 좌우 배치는 미확인 추정(바깥 45, 중앙 20). OGL 실측 33도.",
+      "shape": {
+        "x": 440,
+        "y": -23.0,
+        "w": 62,
+        "h": 16.0
+      }
+    },
+    {
+      "id": "bm2000-r4-06",
+      "row": 4,
+      "order": 6,
+      "type": "sloper",
+      "fingers": null,
+      "depthMm": null,
+      "slopeDeg": 45,
+      "mirrorOf": "bm2000-r4-01",
+      "label": "45 degree sloper",
+      "sourceIds": [
+        "s1",
+        "s2",
+        "s3"
+      ],
+      "confidence": "retailer",
+      "note": "사진에 보이지 않는 면. 개수는 리테일러 목록(45/35/20 각 2개), OGL 실측 42/33/19도(가운데가 가장 완만). 좌우 배치는 미확인 추정(바깥 45, 중앙 20). OGL 실측 42도.",
+      "shape": {
+        "x": 508,
+        "y": -23.0,
+        "w": 62,
+        "h": 16.0
+      }
+    }
+  ],
+  "layout": {
+    "width": 580,
+    "height": 126,
+    "parts": [
+      {
+        "role": "block",
+        "x": 208,
+        "y": 0,
+        "w": 164,
+        "h": 34,
+        "r": 10
+      },
+      {
+        "role": "block",
+        "x": 104.5,
+        "y": 11.2,
+        "w": 371,
+        "h": 30,
+        "r": 10
+      },
+      {
+        "role": "ledge",
+        "x": 3,
+        "y": 70,
+        "w": 574,
+        "h": 55.7,
+        "r": 16
+      },
+      {
+        "role": "body",
+        "x": 0,
+        "y": 18.7,
+        "w": 580,
+        "h": 55.1,
+        "r": 14
+      }
+    ]
+  }
+}

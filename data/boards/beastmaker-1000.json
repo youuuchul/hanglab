@@ -1,0 +1,608 @@
+{
+  "id": "beastmaker-1000",
+  "name": "Beastmaker 1000 Series",
+  "sources": [
+    {
+      "id": "s1",
+      "url": "https://upandunder.co.uk/beastmaker-beastmaker-1000-series",
+      "title": "Up & Under - Beastmaker 1000 (홀드 구성, 10mm, 치수)"
+    },
+    {
+      "id": "s2",
+      "url": "https://climbfit.com.au/?p=1643",
+      "title": "Climb Fit - Beastmaker 1000 Hangboard (홀드 구성)"
+    },
+    {
+      "id": "s3",
+      "url": "https://thehangboard.com/pages/beastmaker-1000-vs-2000",
+      "title": "The Hangboard - Beastmaker 1000 vs 2000 edge sizes (mm 목록, 경쟁사 자료)"
+    },
+    {
+      "id": "s4",
+      "url": "https://www.outdoorgearlab.com/reviews/climbing/hangboard/beastmaker-1000",
+      "title": "OutdoorGearLab - hangboard review (1000: 상단 행 45mm대, 하단 행 20mm대, 15mm edge)"
+    },
+    {
+      "id": "s5",
+      "url": "https://rockprodigytraining.proboards.com/thread/1075/beastmaker-1000-holds",
+      "title": "Rock Prodigy forum - Beastmaker 1000 holds (본문 미열람, 검색 요약만; 하단 바깥 18mm, 상단 14mm)"
+    },
+    {
+      "id": "s6",
+      "url": "https://rupertgatterbauer.com/beastmaker-1000/",
+      "title": "Rupert Gatterbauer - Beastmaker 1000 review (본문 미열람, 검색 요약만; 상단 작은 edge 15mm, 깊이 50/45/30/25/20/15)"
+    },
+    {
+      "id": "s7",
+      "url": "local:photo/beastmaker1000.jpg",
+      "title": "사용자 촬영 사진 (행별 개수·배치)"
+    }
+  ],
+  "holds": [
+    {
+      "id": "bm1000-r1-01",
+      "row": 1,
+      "order": 1,
+      "type": "edge",
+      "fingers": 4,
+      "depthMm": 10,
+      "slopeDeg": null,
+      "mirrorOf": "bm1000-r1-04",
+      "label": "small 4 finger edge",
+      "sourceIds": [
+        "s1",
+        "s3",
+        "s4",
+        "s6",
+        "s7"
+      ],
+      "confidence": "photo-estimate",
+      "note": "Beastmaker 표기 10mm(리테일러 s1 인용). 독립 측정은 14~15mm(s3,s4,s6)로 상이. 사진상 상단 중앙 2개 위치로 추정. 위치-종류 대응은 사진 근거(양끝 폭 77mm·얕은 바닥, 가운데 폭 62mm·깊은 음영)로 재배치.",
+      "shape": {
+        "x": 29.5,
+        "y": 15.3,
+        "w": 77.0,
+        "h": 22.2
+      }
+    },
+    {
+      "id": "bm1000-r1-02",
+      "row": 1,
+      "order": 2,
+      "type": "jug",
+      "fingers": 4,
+      "depthMm": null,
+      "slopeDeg": null,
+      "mirrorOf": "bm1000-r1-03",
+      "label": "jug",
+      "sourceIds": [
+        "s1",
+        "s2",
+        "s7"
+      ],
+      "confidence": "photo-estimate",
+      "note": "깊이 공식·리테일러 수치 없음. 폭은 사진 추정. 위치-종류 대응은 사진 근거(양끝 폭 77mm·얕은 바닥, 가운데 폭 62mm·깊은 음영)로 재배치.",
+      "shape": {
+        "x": 222.2,
+        "y": 15.3,
+        "w": 62.0,
+        "h": 22.2
+      }
+    },
+    {
+      "id": "bm1000-r1-03",
+      "row": 1,
+      "order": 3,
+      "type": "jug",
+      "fingers": 4,
+      "depthMm": null,
+      "slopeDeg": null,
+      "mirrorOf": "bm1000-r1-02",
+      "label": "jug",
+      "sourceIds": [
+        "s1",
+        "s2",
+        "s7"
+      ],
+      "confidence": "photo-estimate",
+      "note": "깊이 수치 없음. 위치-종류 대응은 사진 근거(양끝 폭 77mm·얕은 바닥, 가운데 폭 62mm·깊은 음영)로 재배치.",
+      "shape": {
+        "x": 295.8,
+        "y": 15.3,
+        "w": 62.0,
+        "h": 22.2
+      }
+    },
+    {
+      "id": "bm1000-r1-04",
+      "row": 1,
+      "order": 4,
+      "type": "edge",
+      "fingers": 4,
+      "depthMm": 10,
+      "slopeDeg": null,
+      "mirrorOf": "bm1000-r1-01",
+      "label": "small 4 finger edge",
+      "sourceIds": [
+        "s1",
+        "s3",
+        "s4",
+        "s6",
+        "s7"
+      ],
+      "confidence": "photo-estimate",
+      "note": "Beastmaker 표기 10mm. 독립 측정 14~15mm. 위치-종류 대응은 사진 근거(양끝 폭 77mm·얕은 바닥, 가운데 폭 62mm·깊은 음영)로 재배치.",
+      "shape": {
+        "x": 473.5,
+        "y": 15.3,
+        "w": 77.0,
+        "h": 22.2
+      }
+    },
+    {
+      "id": "bm1000-r2-01",
+      "row": 2,
+      "order": 1,
+      "type": "edge",
+      "fingers": 4,
+      "depthMm": 45,
+      "slopeDeg": null,
+      "mirrorOf": "bm1000-r2-07",
+      "label": "deep 4 finger edge",
+      "sourceIds": [
+        "s1",
+        "s3",
+        "s4",
+        "s7"
+      ],
+      "confidence": "community",
+      "note": "행 단위 값(OutdoorGearLab 45mm대)과 s3 목록에서 종류별 대응을 추정. 개별 측정 아님. s3 목록의 4F 45/50 중 어느 쪽인지 불확실.",
+      "shape": {
+        "x": 16.4,
+        "y": 47.9,
+        "w": 83.3,
+        "h": 24.3
+      }
+    },
+    {
+      "id": "bm1000-r2-02",
+      "row": 2,
+      "order": 2,
+      "type": "pocket",
+      "fingers": 2,
+      "depthMm": 50,
+      "slopeDeg": null,
+      "mirrorOf": "bm1000-r2-06",
+      "label": "deep 2 finger pocket",
+      "sourceIds": [
+        "s1",
+        "s3",
+        "s4",
+        "s7"
+      ],
+      "confidence": "community",
+      "note": "s3: deep 2-finger pocket 50mm.",
+      "shape": {
+        "x": 112.6,
+        "y": 47.9,
+        "w": 45.5,
+        "h": 24.3
+      }
+    },
+    {
+      "id": "bm1000-r2-03",
+      "row": 2,
+      "order": 3,
+      "type": "pocket",
+      "fingers": 3,
+      "depthMm": 45,
+      "slopeDeg": null,
+      "mirrorOf": "bm1000-r2-05",
+      "label": "deep 3 finger pocket",
+      "sourceIds": [
+        "s1",
+        "s3",
+        "s4",
+        "s7"
+      ],
+      "confidence": "community",
+      "note": "s3: deep 3-finger pocket 45mm.",
+      "shape": {
+        "x": 171.2,
+        "y": 47.9,
+        "w": 61.8,
+        "h": 24.3
+      }
+    },
+    {
+      "id": "bm1000-r2-04",
+      "row": 2,
+      "order": 4,
+      "type": "edge",
+      "fingers": 4,
+      "depthMm": 50,
+      "slopeDeg": null,
+      "mirrorOf": null,
+      "label": "very deep 4 finger edge",
+      "sourceIds": [
+        "s1",
+        "s3",
+        "s4",
+        "s7"
+      ],
+      "confidence": "community",
+      "note": "행 단위 값(OutdoorGearLab 45mm대)과 s3 목록에서 종류별 대응을 추정. 개별 측정 아님.",
+      "shape": {
+        "x": 245.6,
+        "y": 47.9,
+        "w": 88.9,
+        "h": 24.3
+      }
+    },
+    {
+      "id": "bm1000-r2-05",
+      "row": 2,
+      "order": 5,
+      "type": "pocket",
+      "fingers": 3,
+      "depthMm": 45,
+      "slopeDeg": null,
+      "mirrorOf": "bm1000-r2-03",
+      "label": "deep 3 finger pocket",
+      "sourceIds": [
+        "s1",
+        "s3",
+        "s4",
+        "s7"
+      ],
+      "confidence": "community",
+      "note": "s3: deep 3-finger pocket 45mm.",
+      "shape": {
+        "x": 347.0,
+        "y": 47.9,
+        "w": 61.8,
+        "h": 24.3
+      }
+    },
+    {
+      "id": "bm1000-r2-06",
+      "row": 2,
+      "order": 6,
+      "type": "pocket",
+      "fingers": 2,
+      "depthMm": 50,
+      "slopeDeg": null,
+      "mirrorOf": "bm1000-r2-02",
+      "label": "deep 2 finger pocket",
+      "sourceIds": [
+        "s1",
+        "s3",
+        "s4",
+        "s7"
+      ],
+      "confidence": "community",
+      "note": "s3: deep 2-finger pocket 50mm.",
+      "shape": {
+        "x": 421.9,
+        "y": 47.9,
+        "w": 45.5,
+        "h": 24.3
+      }
+    },
+    {
+      "id": "bm1000-r2-07",
+      "row": 2,
+      "order": 7,
+      "type": "edge",
+      "fingers": 4,
+      "depthMm": 45,
+      "slopeDeg": null,
+      "mirrorOf": "bm1000-r2-01",
+      "label": "deep 4 finger edge",
+      "sourceIds": [
+        "s1",
+        "s3",
+        "s4",
+        "s7"
+      ],
+      "confidence": "community",
+      "note": "행 단위 값(OutdoorGearLab 45mm대)과 s3 목록에서 종류별 대응을 추정. 개별 측정 아님. s3 목록의 4F 45/50 중 어느 쪽인지 불확실.",
+      "shape": {
+        "x": 480.4,
+        "y": 47.9,
+        "w": 83.3,
+        "h": 24.3
+      }
+    },
+    {
+      "id": "bm1000-r3-01",
+      "row": 3,
+      "order": 1,
+      "type": "edge",
+      "fingers": 4,
+      "depthMm": 20,
+      "slopeDeg": null,
+      "mirrorOf": "bm1000-r3-06",
+      "label": "medium 4 finger edge",
+      "sourceIds": [
+        "s1",
+        "s3",
+        "s4",
+        "s5",
+        "s7"
+      ],
+      "confidence": "community",
+      "note": "행 단위 값(OutdoorGearLab 20mm대)과 s3 목록 대응 추정. s5는 하단 바깥 18mm로 보고(2016, 단일 측정).",
+      "shape": {
+        "x": 62.5,
+        "y": 95.9,
+        "w": 89.6,
+        "h": 25.0
+      }
+    },
+    {
+      "id": "bm1000-r3-02",
+      "row": 3,
+      "order": 2,
+      "type": "pocket",
+      "fingers": 2,
+      "depthMm": 25,
+      "slopeDeg": null,
+      "mirrorOf": "bm1000-r3-05",
+      "label": "medium 2 finger pocket",
+      "sourceIds": [
+        "s1",
+        "s3",
+        "s4",
+        "s7"
+      ],
+      "confidence": "community",
+      "note": "s3: 2-finger pocket 25mm.",
+      "shape": {
+        "x": 167.4,
+        "y": 95.9,
+        "w": 42.8,
+        "h": 25.0
+      }
+    },
+    {
+      "id": "bm1000-r3-03",
+      "row": 3,
+      "order": 3,
+      "type": "pocket",
+      "fingers": 3,
+      "depthMm": 20,
+      "slopeDeg": null,
+      "mirrorOf": "bm1000-r3-04",
+      "label": "medium 3 finger pocket",
+      "sourceIds": [
+        "s1",
+        "s3",
+        "s4",
+        "s7"
+      ],
+      "confidence": "community",
+      "note": "s3 목록에 3F 20mm와 3F edge 30mm가 있어 어느 쪽이 이 홀드인지 불확실. 20mm 채택(행 20mm대 근거).",
+      "shape": {
+        "x": 225.0,
+        "y": 95.9,
+        "w": 58.0,
+        "h": 25.0
+      }
+    },
+    {
+      "id": "bm1000-r3-04",
+      "row": 3,
+      "order": 4,
+      "type": "pocket",
+      "fingers": 3,
+      "depthMm": 20,
+      "slopeDeg": null,
+      "mirrorOf": "bm1000-r3-03",
+      "label": "medium 3 finger pocket",
+      "sourceIds": [
+        "s1",
+        "s3",
+        "s4",
+        "s7"
+      ],
+      "confidence": "community",
+      "note": "위와 동일.",
+      "shape": {
+        "x": 297.0,
+        "y": 95.9,
+        "w": 58.0,
+        "h": 25.0
+      }
+    },
+    {
+      "id": "bm1000-r3-05",
+      "row": 3,
+      "order": 5,
+      "type": "pocket",
+      "fingers": 2,
+      "depthMm": 25,
+      "slopeDeg": null,
+      "mirrorOf": "bm1000-r3-02",
+      "label": "medium 2 finger pocket",
+      "sourceIds": [
+        "s1",
+        "s3",
+        "s4",
+        "s7"
+      ],
+      "confidence": "community",
+      "note": "s3: 2-finger pocket 25mm.",
+      "shape": {
+        "x": 369.8,
+        "y": 95.9,
+        "w": 42.8,
+        "h": 25.0
+      }
+    },
+    {
+      "id": "bm1000-r3-06",
+      "row": 3,
+      "order": 6,
+      "type": "edge",
+      "fingers": 4,
+      "depthMm": 20,
+      "slopeDeg": null,
+      "mirrorOf": "bm1000-r3-01",
+      "label": "medium 4 finger edge",
+      "sourceIds": [
+        "s1",
+        "s3",
+        "s4",
+        "s5",
+        "s7"
+      ],
+      "confidence": "community",
+      "note": "행 단위 값(OutdoorGearLab 20mm대)과 s3 목록 대응 추정. s5는 하단 바깥 18mm로 보고(2016, 단일 측정).",
+      "shape": {
+        "x": 427.9,
+        "y": 95.9,
+        "w": 89.6,
+        "h": 25.0
+      }
+    },
+    {
+      "id": "bm1000-r4-01",
+      "row": 4,
+      "order": 1,
+      "type": "sloper",
+      "fingers": null,
+      "depthMm": null,
+      "slopeDeg": 35,
+      "mirrorOf": "bm1000-r4-04",
+      "label": "35 degree sloper",
+      "sourceIds": [
+        "s1",
+        "s2"
+      ],
+      "confidence": "retailer",
+      "note": "사진에 보이지 않는 면(하단/측면). 개수와 각도는 리테일러 목록, 좌우 배치 순서는 미확인 추정(바깥 35, 안쪽 20).",
+      "shape": {
+        "x": 14,
+        "y": -23.0,
+        "w": 106,
+        "h": 16.0
+      }
+    },
+    {
+      "id": "bm1000-r4-02",
+      "row": 4,
+      "order": 2,
+      "type": "sloper",
+      "fingers": null,
+      "depthMm": null,
+      "slopeDeg": 20,
+      "mirrorOf": "bm1000-r4-03",
+      "label": "20 degree sloper",
+      "sourceIds": [
+        "s1",
+        "s2"
+      ],
+      "confidence": "retailer",
+      "note": "사진에 보이지 않는 면(하단/측면). 개수와 각도는 리테일러 목록, 좌우 배치 순서는 미확인 추정(바깥 35, 안쪽 20).",
+      "shape": {
+        "x": 130,
+        "y": -23.0,
+        "w": 84,
+        "h": 16.0
+      }
+    },
+    {
+      "id": "bm1000-r4-03",
+      "row": 4,
+      "order": 3,
+      "type": "sloper",
+      "fingers": null,
+      "depthMm": null,
+      "slopeDeg": 20,
+      "mirrorOf": "bm1000-r4-02",
+      "label": "20 degree sloper",
+      "sourceIds": [
+        "s1",
+        "s2"
+      ],
+      "confidence": "retailer",
+      "note": "사진에 보이지 않는 면(하단/측면). 개수와 각도는 리테일러 목록, 좌우 배치 순서는 미확인 추정(바깥 35, 안쪽 20).",
+      "shape": {
+        "x": 366,
+        "y": -23.0,
+        "w": 84,
+        "h": 16.0
+      }
+    },
+    {
+      "id": "bm1000-r4-04",
+      "row": 4,
+      "order": 4,
+      "type": "sloper",
+      "fingers": null,
+      "depthMm": null,
+      "slopeDeg": 35,
+      "mirrorOf": "bm1000-r4-01",
+      "label": "35 degree sloper",
+      "sourceIds": [
+        "s1",
+        "s2"
+      ],
+      "confidence": "retailer",
+      "note": "사진에 보이지 않는 면(하단/측면). 개수와 각도는 리테일러 목록, 좌우 배치 순서는 미확인 추정(바깥 35, 안쪽 20).",
+      "shape": {
+        "x": 460,
+        "y": -23.0,
+        "w": 106,
+        "h": 16.0
+      }
+    }
+  ],
+  "layout": {
+    "width": 580,
+    "height": 133,
+    "parts": [
+      {
+        "role": "block",
+        "x": 8,
+        "y": 0,
+        "w": 118,
+        "h": 40,
+        "r": 14
+      },
+      {
+        "role": "block",
+        "x": 454,
+        "y": 0,
+        "w": 118,
+        "h": 40,
+        "r": 14
+      },
+      {
+        "role": "block",
+        "x": 218,
+        "y": 5.6,
+        "w": 144,
+        "h": 36,
+        "r": 12
+      },
+      {
+        "role": "ledge",
+        "x": 5,
+        "y": 76,
+        "w": 570,
+        "h": 57,
+        "r": 26
+      },
+      {
+        "role": "body",
+        "x": 0,
+        "y": 15,
+        "w": 580,
+        "h": 68.4,
+        "r": 16
+      }
+    ]
+  }
+}
