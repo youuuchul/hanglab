@@ -7,4 +7,5 @@ export const colors = {
   textDim: '#8B9099',
   accent: '#FF6A1F',
   accentDim: '#3A2216',
+  danger: '#D93636',
 };

@@ -1,18 +1,39 @@
 import { StatusBar } from 'expo-status-bar';
-import { useEffect, useMemo, useState } from 'react';
-import { Pressable, ScrollView, StyleSheet, Text, useWindowDimensions, View } from 'react-native';
+import { useEffect, useMemo, useRef, useState } from 'react';
+import { Pressable, ScrollView, StyleSheet, Text, TextInput, useWindowDimensions, View } from 'react-native';
 import { SafeAreaProvider, SafeAreaView } from 'react-native-safe-area-context';
 
 import { BoardView } from './src/BoardView';
-import { BOARDS, HandMode, Hold, selectionFor, selectionLabel } from './src/boards';
-import { HangSet, loadSets, saveSets } from './src/storage';
+import { BOARDS, HandMode, Hold, selectionFor, selectionLabel, shortBoardName } from './src/boards';
+import { formatDelta, formatDuration, holdKey, holdStats, weekStarts } from './src/stats';
+import { StatsSheet } from './src/StatsSheet';
+import { DEFAULT_TIMER_PREFS, HangSet, loadSets, loadTimerPrefs, saveSets, saveTimerPrefs, TimerPrefs } from './src/storage';
+import { TARGET_STEPS, TargetDial } from './src/TargetDial';
 import { colors } from './src/theme';
 import { Phase, READY_MS, useHangTimer } from './src/useHangTimer';
 
 const PHASE_LABEL: Record<Phase, string> = { idle: '대기', ready: '준비', hang: '매달리기', rest: '휴식' };
 
+const TARGET_MIN_S = TARGET_STEPS[0];
+const TARGET_MAX_S = TARGET_STEPS[TARGET_STEPS.length - 1];
+const DOUBLE_TAP_MS = 350;
+
 function formatSeconds(ms: number): string {
   return (ms / 1000).toFixed(1);
+}
+
+function formatRemaining(ms: number): string {
+  if (ms > 60000) return formatClock(Math.ceil(ms / 1000) * 1000);
+  return (Math.ceil(Math.max(0, ms) / 100) / 10).toFixed(1);
+}
+
+function formatElapsed(ms: number): string {
+  return ms >= 60000 ? formatClock(ms) : formatSeconds(ms);
+}
+
+function formatTarget(s: number): string {
+  if (s < 60) return `${s}초`;
+  return s % 60 === 0 ? `${s / 60}분` : `${Math.floor(s / 60)}분 ${s % 60}초`;
 }
 
 function formatClock(ms: number): string {
@@ -45,12 +66,42 @@ function Main() {
   const [mode, setMode] = useState<HandMode>('both');
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
   const [sets, setSets] = useState<HangSet[] | null>(null);
+  const [statsOpen, setStatsOpen] = useState(false);
+  const [statsAt, setStatsAt] = useState(0);
+  const [openSetId, setOpenSetId] = useState<string | null>(null);
+  const [prefs, setPrefs] = useState<TimerPrefs>(DEFAULT_TIMER_PREFS);
+  const [editing, setEditing] = useState<{ key: string | null } | null>(null);
+  const [draft, setDraft] = useState('');
+  const lastClockTap = useRef(0);
 
   const board = BOARDS.find((b) => b.id === boardId) ?? BOARDS[0];
 
   useEffect(() => {
-    loadSets().then(setSets);
+    Promise.all([loadSets(), loadTimerPrefs()]).then(([loadedSets, loadedPrefs]) => {
+      setPrefs(loadedPrefs);
+      setSets(loadedSets);
+    });
   }, []);
+
+  const countdown = prefs.countdown;
+  const selectedKey = selectedIds.length > 0 ? holdKey(boardId, mode, selectedIds) : null;
+  const targetS = (selectedKey !== null ? prefs.targetsS[selectedKey] : undefined) ?? prefs.lastTargetS;
+
+  const updatePrefs = (change: (p: TimerPrefs) => TimerPrefs, save: boolean) => {
+    setPrefs((prev) => {
+      const next = change(prev);
+      if (save) saveTimerPrefs(next);
+      return next;
+    });
+  };
+
+  const setTarget = (key: string | null, seconds: number, save: boolean) => {
+    const value = Math.min(TARGET_MAX_S, Math.max(TARGET_MIN_S, seconds));
+    updatePrefs(
+      (p) => ({ ...p, lastTargetS: value, targetsS: key === null ? p.targetsS : { ...p.targetsS, [key]: value } }),
+      save,
+    );
+  };
 
   const record = (durationMs: number, endedAt: number) => {
     setSets((prev) => {
@@ -58,6 +109,15 @@ function Main() {
         ...(prev ?? []),
         { id: `${endedAt}`, boardId, holdIds: selectedIds, mode, durationMs, endedAt },
       ];
+      saveSets(next);
+      return next;
+    });
+  };
+
+  const removeSet = (id: string) => {
+    setOpenSetId(null);
+    setSets((prev) => {
+      const next = (prev ?? []).filter((s) => s.id !== id);
       saveSets(next);
       return next;
     });
@@ -90,12 +150,38 @@ function Main() {
   }, [sets]);
   const todayTotalMs = today.reduce((sum, s) => sum + s.durationMs, 0);
 
-  const display =
-    timer.phase === 'ready'
-      ? String(Math.max(1, Math.ceil((READY_MS - timer.elapsedMs) / 1000)))
-      : timer.phase === 'rest'
-        ? formatClock(timer.elapsedMs)
-        : formatSeconds(timer.phase === 'hang' ? timer.elapsedMs : 0);
+  const selectedStat = useMemo(() => {
+    if (selectedIds.length === 0) return null;
+    const key = holdKey(boardId, mode, selectedIds);
+    return holdStats(sets ?? [], weekStarts(Date.now())).find((h) => h.key === key) ?? null;
+  }, [sets, boardId, mode, selectedIds]);
+  const selectedDelta = selectedStat ? selectedStat.weeks.at(-1)! - selectedStat.weeks.at(-2)! : 0;
+
+  const canEditTarget = countdown && !busy;
+
+  const tapClock = () => {
+    const t = Date.now();
+    if (t - lastClockTap.current < DOUBLE_TAP_MS) {
+      lastClockTap.current = 0;
+      setDraft(String(targetS));
+      setEditing({ key: selectedKey });
+    } else {
+      lastClockTap.current = t;
+    }
+  };
+
+  const finishEdit = () => {
+    if (editing === null) return;
+    const n = Number.parseInt(draft, 10);
+    if (Number.isFinite(n)) setTarget(editing.key, n, true);
+    setEditing(null);
+  };
+
+  let display = countdown ? formatRemaining(targetS * 1000) : formatSeconds(0);
+  if (timer.phase === 'ready') display = String(Math.max(1, Math.ceil((READY_MS - timer.elapsedMs) / 1000)));
+  else if (timer.phase === 'rest') display = formatClock(timer.elapsedMs);
+  else if (timer.phase === 'hang')
+    display = timer.target === null ? formatElapsed(timer.elapsedMs) : formatRemaining(timer.target - timer.elapsedMs);
 
   const canStart = selectedIds.length > 0 && sets !== null;
   const primaryLabel = busy ? (timer.phase === 'ready' ? '취소' : '정지') : '시작';
@@ -104,15 +190,27 @@ function Main() {
   return (
     <SafeAreaView style={styles.root} edges={['top', 'left', 'right']}>
       <StatusBar style="light" />
-      <View style={styles.segment}>
-        {BOARDS.map((b) => {
-          const on = b.id === boardId;
-          return (
-            <Pressable key={b.id} onPress={() => changeBoard(b.id)} style={[styles.segmentItem, on && styles.segmentOn]}>
-              <Text style={[styles.segmentText, on && styles.segmentTextOn]}>{b.name.replace(' Series', '')}</Text>
-            </Pressable>
-          );
-        })}
+      <View style={styles.topBar}>
+        <View style={styles.segment}>
+          {BOARDS.map((b) => {
+            const on = b.id === boardId;
+            return (
+              <Pressable key={b.id} onPress={() => changeBoard(b.id)} style={[styles.segmentItem, on && styles.segmentOn]}>
+                <Text style={[styles.segmentText, on && styles.segmentTextOn]}>{b.name.replace(' Series', '')}</Text>
+              </Pressable>
+            );
+          })}
+        </View>
+        <Pressable
+          disabled={busy || sets === null}
+          onPress={() => {
+            setStatsAt(Date.now());
+            setStatsOpen(true);
+          }}
+          style={[styles.statsButton, (busy || sets === null) && styles.statsButtonDisabled]}
+        >
+          <Text style={styles.statsButtonText}>기록</Text>
+        </Pressable>
       </View>
 
       <View style={styles.boardWrap}>
@@ -120,9 +218,22 @@ function Main() {
       </View>
 
       <View style={styles.holdRow}>
-        <Text style={[styles.holdText, selectedIds.length === 0 && styles.dim]} numberOfLines={1}>
-          {selectedIds.length > 0 ? selectionLabel(board, selectedIds, mode) : '홀드 선택'}
-        </Text>
+        <View style={styles.holdInfo}>
+          <Text style={[styles.holdText, selectedIds.length === 0 && styles.dim]} numberOfLines={1}>
+            {selectedIds.length > 0 ? selectionLabel(board, selectedIds, mode) : '홀드 선택'}
+          </Text>
+          <Text style={styles.holdStat} numberOfLines={1}>
+            {selectedStat ? (
+              <>
+                이번 주 {formatDuration(selectedStat.weeks.at(-1)!)}{' '}
+                <Text style={selectedDelta > 0 && styles.up}>{formatDelta(selectedDelta)}</Text> · 최장{' '}
+                {formatDuration(selectedStat.bestMs)}
+              </>
+            ) : selectedIds.length > 0 ? (
+              '기록 없음'
+            ) : null}
+          </Text>
+        </View>
         <View style={styles.modeGroup}>
           {(['both', 'one'] as HandMode[]).map((m) => (
             <Pressable key={m} onPress={() => changeMode(m)} style={[styles.modeItem, mode === m && styles.modeOn]}>
@@ -133,11 +244,57 @@ function Main() {
       </View>
 
       <View style={styles.timer}>
-        <Text style={[styles.phase, timer.phase === 'hang' && styles.phaseHang]}>{PHASE_LABEL[timer.phase]}</Text>
-        <Text style={[styles.clock, timer.phase === 'hang' && styles.clockHang]}>{display}</Text>
+        <View style={styles.timerControls}>
+          <View style={styles.modeGroup}>
+            {[false, true].map((cd) => (
+              <Pressable
+                key={String(cd)}
+                disabled={busy}
+                onPress={() => updatePrefs((p) => ({ ...p, countdown: cd }), true)}
+                style={[styles.modeItem, countdown === cd && styles.modeOn]}
+              >
+                <Text style={[styles.modeText, countdown === cd && styles.modeTextOn]}>{cd ? '카운트다운' : '스톱워치'}</Text>
+              </Pressable>
+            ))}
+          </View>
+        </View>
+        <Text style={[styles.phase, timer.phase === 'hang' && styles.phaseHang]}>
+          {countdown && timer.phase === 'rest' ? `휴식 · 다음 ${formatTarget(targetS)}` : PHASE_LABEL[timer.phase]}
+        </Text>
+        {editing !== null ? (
+          <View style={styles.editRow}>
+            <TextInput
+              accessibilityLabel="목표 시간 입력"
+              value={draft}
+              onChangeText={setDraft}
+              onSubmitEditing={finishEdit}
+              onBlur={finishEdit}
+              keyboardType="number-pad"
+              maxLength={3}
+              autoFocus
+              selectTextOnFocus
+              style={[styles.clock, styles.clockInput]}
+            />
+            <Pressable onPress={finishEdit} style={styles.doneButton}>
+              <Text style={styles.doneText}>완료</Text>
+            </Pressable>
+          </View>
+        ) : (
+          <Pressable disabled={!canEditTarget} onPress={tapClock}>
+            <Text style={[styles.clock, timer.phase === 'hang' && styles.clockHang]}>{display}</Text>
+          </Pressable>
+        )}
+        {countdown && (
+          <TargetDial
+            value={targetS}
+            disabled={!canEditTarget || editing !== null}
+            onChange={(v) => setTarget(selectedKey, v, false)}
+            onCommit={(v) => setTarget(selectedKey, v, true)}
+          />
+        )}
         <Pressable
-          disabled={!busy && !canStart}
-          onPress={busy ? timer.stop : timer.start}
+          disabled={(!busy && !canStart) || editing !== null}
+          onPress={busy ? timer.stop : () => timer.start(countdown ? targetS * 1000 : null)}
           style={[styles.primary, busy && styles.primaryStop, !busy && !canStart && styles.primaryDisabled]}
         >
           <Text style={styles.primaryText}>{primaryLabel}</Text>
@@ -147,38 +304,45 @@ function Main() {
       <View style={styles.setsHeader}>
         <Text style={styles.setsTitle}>오늘</Text>
         <Text style={styles.setsMeta}>
-          {today.length}세트 · {formatSeconds(todayTotalMs)}초
+          {today.length}세트 · {formatDuration(todayTotalMs)}
         </Text>
       </View>
       <ScrollView style={styles.sets} contentContainerStyle={styles.setsContent}>
         {[...today].reverse().map((s, i) => {
           const b = BOARDS.find((x) => x.id === s.boardId);
+          const open = openSetId === s.id;
           return (
-            <View key={s.id} style={styles.setRow}>
+            <Pressable key={s.id} onPress={() => setOpenSetId(open ? null : s.id)} style={styles.setRow}>
               <Text style={styles.setIndex}>{today.length - i}</Text>
               <View style={styles.setBody}>
                 <Text style={styles.setHold} numberOfLines={1}>
                   {b ? selectionLabel(b, s.holdIds, s.mode) : s.boardId}
                 </Text>
                 <Text style={styles.setSub}>
-                  {b?.name.replace('Beastmaker ', 'BM ').replace(' Series', '')} · {s.mode === 'both' ? '양손' : '한 손'} · {formatTime(s.endedAt)}
+                  {b ? shortBoardName(b) : ''} · {s.mode === 'both' ? '양손' : '한 손'} · {formatTime(s.endedAt)}
                 </Text>
               </View>
-              <Text style={styles.setDuration}>{formatSeconds(s.durationMs)}초</Text>
-            </View>
+              <Text style={styles.setDuration}>{formatDuration(s.durationMs)}</Text>
+              {open && (
+                <Pressable onPress={() => removeSet(s.id)} style={styles.deleteButton}>
+                  <Text style={styles.deleteText}>삭제</Text>
+                </Pressable>
+              )}
+            </Pressable>
           );
         })}
       </ScrollView>
+      <StatsSheet visible={statsOpen} openedAt={statsAt} sets={sets ?? []} onClose={() => setStatsOpen(false)} />
     </SafeAreaView>
   );
 }
 
 const styles = StyleSheet.create({
   root: { flex: 1, backgroundColor: colors.bg },
+  topBar: { flexDirection: 'row', alignItems: 'stretch', marginHorizontal: 16, marginTop: 8, gap: 8 },
   segment: {
+    flex: 1,
     flexDirection: 'row',
-    marginHorizontal: 16,
-    marginTop: 8,
     padding: 4,
     borderRadius: 12,
     backgroundColor: colors.surface,
@@ -187,9 +351,15 @@ const styles = StyleSheet.create({
   segmentOn: { backgroundColor: colors.surfaceHigh },
   segmentText: { color: colors.textDim, fontSize: 15, fontWeight: '600' },
   segmentTextOn: { color: colors.text },
+  statsButton: { justifyContent: 'center', paddingHorizontal: 16, borderRadius: 12, backgroundColor: colors.surface },
+  statsButtonDisabled: { opacity: 0.4 },
+  statsButtonText: { color: colors.text, fontSize: 15, fontWeight: '600' },
   boardWrap: { alignItems: 'center', paddingTop: 20, paddingBottom: 8 },
   holdRow: { flexDirection: 'row', alignItems: 'center', marginHorizontal: 16, marginTop: 8, gap: 12 },
-  holdText: { flex: 1, color: colors.text, fontSize: 16, fontWeight: '600' },
+  holdInfo: { flex: 1 },
+  holdText: { color: colors.text, fontSize: 16, fontWeight: '600' },
+  holdStat: { color: colors.textDim, fontSize: 13, lineHeight: 18, minHeight: 18, marginTop: 2, fontVariant: ['tabular-nums'] },
+  up: { color: colors.accent },
   dim: { color: colors.textDim, fontWeight: '500' },
   modeGroup: { flexDirection: 'row', padding: 3, borderRadius: 10, backgroundColor: colors.surface },
   modeItem: { paddingHorizontal: 12, paddingVertical: 7, borderRadius: 8 },
@@ -205,6 +375,24 @@ const styles = StyleSheet.create({
     backgroundColor: colors.surface,
     alignItems: 'center',
   },
+  timerControls: {
+    alignSelf: 'stretch',
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 12,
+  },
+  editRow: { flexDirection: 'row', alignItems: 'center', gap: 12 },
+  clockInput: {
+    width: 170,
+    paddingVertical: 0,
+    textAlign: 'center',
+    color: colors.accent,
+    borderBottomWidth: 2,
+    borderBottomColor: colors.accent,
+  },
+  doneButton: { paddingHorizontal: 14, paddingVertical: 9, borderRadius: 10, backgroundColor: colors.surfaceHigh },
+  doneText: { color: colors.text, fontSize: 15, fontWeight: '700' },
   phase: { color: colors.textDim, fontSize: 14, fontWeight: '600', letterSpacing: 1 },
   phaseHang: { color: colors.accent },
   clock: {
@@ -251,4 +439,6 @@ const styles = StyleSheet.create({
   setHold: { color: colors.text, fontSize: 15, fontWeight: '600' },
   setSub: { color: colors.textDim, fontSize: 12, marginTop: 2 },
   setDuration: { color: colors.text, fontSize: 17, fontWeight: '700', fontVariant: ['tabular-nums'] },
+  deleteButton: { paddingHorizontal: 12, paddingVertical: 7, borderRadius: 8, backgroundColor: colors.danger },
+  deleteText: { color: '#FFFFFF', fontSize: 13, fontWeight: '700' },
 });

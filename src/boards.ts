@@ -59,6 +59,19 @@ export function holdLabel(hold: Hold, side?: '왼쪽' | '오른쪽'): string {
 }
 
 /**
+ * 보드 이름을 목록 부제용 짧은 이름으로 바꾼다.
+ *
+ * Args:
+ *   board: 대상 보드.
+ *
+ * Returns:
+ *   'BM 1000' 형식의 문자열.
+ */
+export function shortBoardName(board: Board): string {
+  return board.name.replace('Beastmaker ', 'BM ').replace(' Series', '');
+}
+
+/**
  * 선택된 홀드 묶음의 표시 이름을 만든다.
  *
  * Args:
