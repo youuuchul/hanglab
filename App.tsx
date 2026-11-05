@@ -7,7 +7,17 @@ import { BoardView } from './src/BoardView';
 import { BOARDS, HandMode, Hold, selectionFor, selectionLabel, shortBoardName } from './src/boards';
 import { formatDelta, formatDuration, holdKey, holdStats, weekStarts } from './src/stats';
 import { StatsSheet } from './src/StatsSheet';
-import { DEFAULT_TIMER_PREFS, HangSet, loadSets, loadTimerPrefs, saveSets, saveTimerPrefs, TimerPrefs } from './src/storage';
+import {
+  DEFAULT_TIMER_PREFS,
+  HangSet,
+  loadSelection,
+  loadSets,
+  loadTimerPrefs,
+  saveSelection,
+  saveSets,
+  saveTimerPrefs,
+  TimerPrefs,
+} from './src/storage';
 import { TARGET_STEPS, TargetDial } from './src/TargetDial';
 import { colors } from './src/theme';
 import { Phase, READY_MS, useHangTimer } from './src/useHangTimer';
@@ -29,11 +39,6 @@ function formatRemaining(ms: number): string {
 
 function formatElapsed(ms: number): string {
   return ms >= 60000 ? formatClock(ms) : formatSeconds(ms);
-}
-
-function formatTarget(s: number): string {
-  if (s < 60) return `${s}초`;
-  return s % 60 === 0 ? `${s / 60}분` : `${Math.floor(s / 60)}분 ${s % 60}초`;
 }
 
 function formatClock(ms: number): string {
@@ -77,11 +82,24 @@ function Main() {
   const board = BOARDS.find((b) => b.id === boardId) ?? BOARDS[0];
 
   useEffect(() => {
-    Promise.all([loadSets(), loadTimerPrefs()]).then(([loadedSets, loadedPrefs]) => {
+    Promise.all([loadSets(), loadTimerPrefs(), loadSelection()]).then(([loadedSets, loadedPrefs, selection]) => {
+      const savedBoard = BOARDS.find((b) => b.id === selection?.boardId);
+      if (selection && savedBoard) {
+        const hold = savedBoard.holds.find((h) => h.id === selection.holdId);
+        setBoardId(savedBoard.id);
+        setMode(selection.mode);
+        setSelectedIds(hold ? selectionFor(hold, selection.mode) : []);
+      }
       setPrefs(loadedPrefs);
       setSets(loadedSets);
     });
   }, []);
+
+  const loaded = sets !== null;
+  const primaryId = selectedIds[0] ?? null;
+  useEffect(() => {
+    if (loaded) saveSelection({ boardId, mode, holdId: primaryId });
+  }, [loaded, boardId, mode, primaryId]);
 
   const countdown = prefs.countdown;
   const selectedKey = selectedIds.length > 0 ? holdKey(boardId, mode, selectedIds) : null;
@@ -179,7 +197,7 @@ function Main() {
 
   let display = countdown ? formatRemaining(targetS * 1000) : formatSeconds(0);
   if (timer.phase === 'ready') display = String(Math.max(1, Math.ceil((READY_MS - timer.elapsedMs) / 1000)));
-  else if (timer.phase === 'rest') display = formatClock(timer.elapsedMs);
+  else if (timer.phase === 'rest' && !countdown) display = formatClock(timer.elapsedMs);
   else if (timer.phase === 'hang')
     display = timer.target === null ? formatElapsed(timer.elapsedMs) : formatRemaining(timer.target - timer.elapsedMs);
 
@@ -259,7 +277,7 @@ function Main() {
           </View>
         </View>
         <Text style={[styles.phase, timer.phase === 'hang' && styles.phaseHang]}>
-          {countdown && timer.phase === 'rest' ? `휴식 · 다음 ${formatTarget(targetS)}` : PHASE_LABEL[timer.phase]}
+          {countdown && timer.phase === 'rest' ? `휴식 · ${formatClock(timer.elapsedMs)}` : PHASE_LABEL[timer.phase]}
         </Text>
         {editing !== null ? (
           <View style={styles.editRow}>

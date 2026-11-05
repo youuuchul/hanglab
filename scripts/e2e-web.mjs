@@ -124,6 +124,19 @@ t = await text();
 check('S2 2000 짝 없는 홀드 단독 선택', t.includes('윗줄 · 3손가락 포켓'));
 await shot('06-2000-select.png');
 
+// S13 마지막 선택 복원: 새로 열면 보드·손 모드·홀드가 골라진 채로 바로 시작 가능
+await tapHold(b2, 'bm2000-r2-02');
+await page.getByText('한 손', { exact: true }).click();
+const oneLabel = (await text()).match(/가운데줄 · (왼쪽|오른쪽) · 모노[^\n]*/)?.[0];
+await page.reload();
+await page.locator(`[aria-label="${b2.name}"]`).waitFor();
+await page.waitForTimeout(500);
+t = await text();
+const restoredStart = await page.getByText('시작', { exact: true }).evaluate((n) => n.closest('[aria-disabled]')?.getAttribute('aria-disabled'));
+check('S13 새로고침 후 2000·한 손·홀드 복원, 시작 활성', !!oneLabel && t.includes(oneLabel) && restoredStart !== 'true', `${oneLabel} / aria-disabled=${restoredStart}`);
+await page.getByText('양손', { exact: true }).click();
+await page.getByText('Beastmaker 1000', { exact: true }).click();
+
 // S7~S10 지표·기록 시트·세트 삭제. 이번 주 월요일 0시 기준 fixture
 // A(가운데줄 3손가락 포켓 양손): 3주 전 20s / 지난주 5s, 10s(일요일 23:59) / 이번 주 7s(월요일 0시), 12s(쌍 순서 반대)
 // B(가운데줄 왼쪽 엣지 한 손): 이번 주 3s
@@ -249,7 +262,8 @@ const dragDial = async (dx) => {
   await page.mouse.up();
   await page.waitForTimeout(300);
 };
-const nextTarget = async () => Number((await text()).match(/휴식 · 다음 (\d+)초/)?.[1]);
+// 카운트다운 휴식 중에는 큰 숫자가 다음 목표, 작은 글씨가 휴식 경과
+const nextTarget = async () => Number(await clockOf());
 
 await page.getByText('카운트다운', { exact: true }).click();
 t = await text();
@@ -278,7 +292,9 @@ check('S11 남은 시간 감소', remaining > 0 && remaining < 2, `남은 ${rema
 await shot('11-countdown.png');
 await page.waitForTimeout(2500);
 const autoRows = await page.getByText(/^\d+\.\d초$/).allInnerTexts();
-check('S11 0초에 자동 기록(정지 안 누름)', (await todayCount()) === 1 && autoRows[0] === '2.0초' && (await nextTarget()) === 2, `세트 ${autoRows.join(',')}`);
+t = await text();
+check('S11 0초에 자동 기록(정지 안 누름)', (await todayCount()) === 1 && autoRows[0] === '2.0초', `세트 ${autoRows.join(',')}`);
+check('S11 휴식 중: 큰 숫자 = 다음 목표, 작은 글씨 = 휴식 경과', (await nextTarget()) === 2 && /휴식 · 0:0\d\n/.test(t) && !t.includes('다음'), t.match(/휴식[^\n]*\n[^\n]+/)?.[0]);
 await page.waitForTimeout(1000);
 check('S11 자동 기록 중복 없음', (await todayCount()) === 1);
 
@@ -349,7 +365,7 @@ check('S12 스톱워치 11분: 분:초 표시, 기록', /^11:0\d$/.test(longCloc
 
 await page.getByText('카운트다운', { exact: true }).click();
 await editTarget('600');
-const maxLabel = (await text()).includes('휴식 · 다음 10분');
+const maxLabel = (await clockOf()) === '10:00';
 await page.getByText('시작', { exact: true }).click();
 await page.waitForTimeout(3500);
 const maxRunning = await clockOf();
@@ -357,16 +373,17 @@ await page.clock.fastForward('10:00');
 await page.waitForTimeout(300);
 const maxRows = await page.getByText(/^\d+분 \d+초$/).allInnerTexts();
 t = await text();
-check('S12 카운트다운 10분: 휴식 중 입력 → 10:00 시작 → 자동 기록', maxLabel && /^(9:5\d|10:00)$/.test(maxRunning) && maxRows[0] === '10분 0초' && t.includes('휴식 · 다음 10분'), `${maxLabel} / ${maxRunning} / ${maxRows[0]}`);
+check('S12 카운트다운 10분: 휴식 중 입력 → 10:00 시작 → 자동 기록', maxLabel && /^(9:5\d|10:00)$/.test(maxRunning) && maxRows[0] === '10분 0초' && (await clockOf()) === '10:00' && /휴식 · 0:0\d/.test(t), `${maxLabel} / ${maxRunning} / ${maxRows[0]}`);
 
 await editTarget('60');
 await dragDial(-13);
 t = await text();
-const at65 = t.includes('휴식 · 다음 1분 5초');
+const at65 = await clockOf();
 await editTarget('180');
 await dragDial(-13);
 t = await text();
-check('S12 다이얼 간격: 60→65초, 180→195초', at65 && t.includes('휴식 · 다음 3분 15초'));
+const at195 = await clockOf();
+check('S12 다이얼 간격: 60→65초, 180→195초', at65 === '1:05' && at195 === '3:15', `${at65} / ${at195}`);
 await shot('13-long.png');
 
 check('콘솔 에러 없음', errors.length === 0, errors.slice(0, 3).join(' / '));
