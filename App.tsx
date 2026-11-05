@@ -7,6 +7,7 @@ import { BoardView } from './src/BoardView';
 import { BOARDS, HandMode, Hold, selectionFor, selectionLabel, shortBoardName } from './src/boards';
 import { formatDelta, formatDuration, holdKey, holdStats, weekStarts } from './src/stats';
 import { StatsSheet } from './src/StatsSheet';
+import { SwipeRow } from './src/SwipeRow';
 import {
   DEFAULT_TIMER_PREFS,
   HangSet,
@@ -91,6 +92,7 @@ function Main() {
   const [statsOpen, setStatsOpen] = useState(false);
   const [statsAt, setStatsAt] = useState(0);
   const [openSetId, setOpenSetId] = useState<string | null>(null);
+  const [viewSetId, setViewSetId] = useState<string | null>(null);
   const [prefs, setPrefs] = useState<TimerPrefs>(DEFAULT_TIMER_PREFS);
   const [editing, setEditing] = useState<{ key: string | null } | null>(null);
   const [draft, setDraft] = useState('');
@@ -157,6 +159,7 @@ function Main() {
 
   const removeSet = (id: string) => {
     setOpenSetId(null);
+    if (viewSetId === id) setViewSetId(null);
     setSets((prev) => {
       const next = (prev ?? []).filter((s) => s.id !== id);
       saveSets(next);
@@ -173,8 +176,17 @@ function Main() {
     setSelectedIds((prev) => (prev[0] === hold.id ? [] : selectionFor(hold, mode)));
   };
 
+  const viewed = viewSetId === null ? null : ((sets ?? []).find((s) => s.id === viewSetId) ?? null);
+  const shownBoard = viewed ? (BOARDS.find((b) => b.id === viewed.boardId) ?? board) : board;
+
+  const pressBoard = (hold: Hold | null) => {
+    if (viewed) setViewSetId(null);
+    else if (hold) selectHold(hold);
+  };
+
   const changeMode = (next: HandMode) => {
     if (busy) return;
+    setViewSetId(null);
     setMode(next);
     const primary = board.holds.find((h) => h.id === selectedIds[0]);
     setSelectedIds(primary ? selectionFor(primary, next) : []);
@@ -182,6 +194,7 @@ function Main() {
 
   const changeBoard = (id: string) => {
     if (busy || id === boardId) return;
+    setViewSetId(null);
     setBoardId(id);
     setSelectedIds([]);
   };
@@ -268,7 +281,13 @@ function Main() {
       </View>
 
       <View style={styles.boardWrap}>
-        <BoardView board={board} width={boardWidth} selectedIds={selectedIds} onSelect={selectHold} />
+        <BoardView
+          board={shownBoard}
+          width={boardWidth}
+          selectedIds={viewed ? [] : selectedIds}
+          markedIds={viewed?.holdIds ?? []}
+          onPress={pressBoard}
+        />
       </View>
 
       <View style={styles.holdRow}>
@@ -416,10 +435,20 @@ function Main() {
       <ScrollView style={styles.sets} contentContainerStyle={styles.setsContent}>
         {[...today].reverse().map((s, i) => {
           const b = BOARDS.find((x) => x.id === s.boardId);
-          const open = openSetId === s.id;
+          const viewing = viewSetId === s.id;
           return (
-            <Pressable key={s.id} onPress={() => setOpenSetId(open ? null : s.id)} style={styles.setRow}>
-              <Text style={styles.setIndex}>{today.length - i}</Text>
+            <SwipeRow
+              key={s.id}
+              open={openSetId === s.id}
+              onOpenChange={(o) => setOpenSetId(o ? s.id : null)}
+              onPress={() => {
+                setOpenSetId(null);
+                setViewSetId(viewing ? null : s.id);
+              }}
+              onDelete={() => removeSet(s.id)}
+              style={[styles.setRow, viewing && styles.setRowViewing]}
+            >
+              <Text style={[styles.setIndex, viewing && styles.setIndexViewing]}>{today.length - i}</Text>
               <View style={styles.setBody}>
                 <Text style={styles.setHold} numberOfLines={1}>
                   {b ? selectionLabel(b, s.holdIds, s.mode) : s.boardId}
@@ -429,12 +458,7 @@ function Main() {
                 </Text>
               </View>
               <Text style={styles.setDuration}>{formatDuration(s.durationMs)}</Text>
-              {open && (
-                <Pressable onPress={() => removeSet(s.id)} style={styles.deleteButton}>
-                  <Text style={styles.deleteText}>삭제</Text>
-                </Pressable>
-              )}
-            </Pressable>
+            </SwipeRow>
           );
         })}
       </ScrollView>
@@ -542,15 +566,15 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     paddingVertical: 12,
-    borderBottomWidth: StyleSheet.hairlineWidth,
-    borderBottomColor: colors.line,
+    paddingRight: 4,
     gap: 12,
+    backgroundColor: colors.bg,
   },
+  setRowViewing: { backgroundColor: colors.surface },
   setIndex: { width: 22, color: colors.textDim, fontSize: 14, fontVariant: ['tabular-nums'], textAlign: 'right' },
+  setIndexViewing: { color: colors.rest, fontWeight: '700' },
   setBody: { flex: 1 },
   setHold: { color: colors.text, fontSize: 15, fontWeight: '600' },
   setSub: { color: colors.textDim, fontSize: 12, marginTop: 2 },
   setDuration: { color: colors.text, fontSize: 17, fontWeight: '700', fontVariant: ['tabular-nums'] },
-  deleteButton: { paddingHorizontal: 12, paddingVertical: 7, borderRadius: 8, backgroundColor: colors.danger },
-  deleteText: { color: '#FFFFFF', fontSize: 13, fontWeight: '700' },
 });

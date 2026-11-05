@@ -13,7 +13,8 @@ type Props = {
   board: Board;
   width: number;
   selectedIds: string[];
-  onSelect: (hold: Hold) => void;
+  markedIds: string[];
+  onPress: (hold: Hold | null) => void;
 };
 
 /**
@@ -22,16 +23,18 @@ type Props = {
  * Args:
  *   board: 그릴 보드.
  *   width: 화면에 그릴 폭(pt).
- *   selectedIds: 강조할 홀드 id 목록.
- *   onSelect: 탭한 위치에서 가장 가까운 홀드를 받는다.
+ *   selectedIds: 지금 고른 홀드 id 목록. 주황으로 채우고 실선 테두리.
+ *   markedIds: 기록에서 불러온 홀드 id 목록. 파랑으로 채우고 점선 테두리.
+ *   onPress: 보드를 탭할 때마다 호출된다. 탭한 위치의 홀드, 홀드가 없으면 null.
  */
-export function BoardView({ board, width, selectedIds, onSelect }: Props) {
+export function BoardView({ board, width, selectedIds, markedIds, onPress }: Props) {
   const { width: bw, height: bh, parts } = board.layout;
   const vbW = bw + PAD_X * 2;
   const vbH = bh - TOP + BOTTOM_PAD;
   const height = (width * vbH) / vbW;
   const scale = vbW / width;
   const selected = new Set(selectedIds);
+  const marked = new Set(markedIds);
 
   const holes = board.holds.filter((h) => h.type !== 'sloper');
   const slopers = board.holds.filter((h) => h.type === 'sloper');
@@ -46,8 +49,7 @@ export function BoardView({ board, width, selectedIds, onSelect }: Props) {
       onResponderRelease={(e) => {
         const x = e.nativeEvent.locationX * scale - PAD_X;
         const y = e.nativeEvent.locationY * scale + TOP;
-        const hold = holdAt(board, x, y);
-        if (hold) onSelect(hold);
+        onPress(holdAt(board, x, y));
       }}
       style={{ width, height }}
     >
@@ -76,6 +78,11 @@ export function BoardView({ board, width, selectedIds, onSelect }: Props) {
               <Stop offset="0" stopColor="#7A2404" />
               <Stop offset="0.5" stopColor={colors.accent} />
               <Stop offset="1" stopColor="#FFB685" />
+            </LinearGradient>
+            <LinearGradient id="holeRec" x1="0" y1="0" x2="0" y2="1">
+              <Stop offset="0" stopColor="#0B2A52" />
+              <Stop offset="0.5" stopColor={colors.rest} />
+              <Stop offset="1" stopColor="#A9D1FF" />
             </LinearGradient>
             <LinearGradient id="sloper" x1="0" y1="0" x2="0" y2="1">
               <Stop offset="0" stopColor="#F8F2E8" />
@@ -116,13 +123,17 @@ export function BoardView({ board, width, selectedIds, onSelect }: Props) {
           {holes.map((hold) => {
             const { x, y, w, h } = hold.shape;
             const on = selected.has(hold.id);
+            const rec = marked.has(hold.id);
             const rx = Math.min(h / 2, 11);
             return (
               <G key={hold.id}>
                 <Rect x={x} y={y + 1.4} width={w} height={h} rx={rx} fill="none" stroke="#FFFFFF" strokeOpacity={0.7} strokeWidth={1.2} />
-                <Rect x={x} y={y} width={w} height={h} rx={rx} fill={on ? 'url(#holeOn)' : 'url(#hole)'} />
+                <Rect x={x} y={y} width={w} height={h} rx={rx} fill={on ? 'url(#holeOn)' : rec ? 'url(#holeRec)' : 'url(#hole)'} />
                 <Rect x={x + 0.4} y={y + 0.4} width={w - 0.8} height={h - 0.8} rx={rx} fill="none" stroke="#000" strokeOpacity={0.35} strokeWidth={0.8} />
                 {on && <Rect x={x - 2.5} y={y - 2.5} width={w + 5} height={h + 5} rx={rx + 2.5} fill="none" stroke={colors.accent} strokeWidth={1.6} />}
+                {rec && (
+                  <Rect x={x - 3} y={y - 3} width={w + 6} height={h + 6} rx={rx + 3} fill="none" stroke={colors.rest} strokeWidth={1.6} strokeDasharray="4 3" />
+                )}
               </G>
             );
           })}
@@ -130,10 +141,15 @@ export function BoardView({ board, width, selectedIds, onSelect }: Props) {
           {slopers.map((hold) => {
             const { x, y, w, h } = hold.shape;
             const on = selected.has(hold.id);
+            const rec = marked.has(hold.id);
+            const fill = on ? colors.accent : rec ? colors.rest : 'url(#sloper)';
             return (
               <G key={hold.id}>
-                <Rect x={x} y={y} width={w} height={h} rx={h / 2} fill={on ? colors.accent : 'url(#sloper)'} stroke={on ? colors.accent : '#C9B99D'} strokeWidth={0.6} />
-                <SvgText x={x + w / 2} y={y + h / 2 + 3.3} fontSize={9.5} fontWeight="700" fontFamily={SVG_FONT} textAnchor="middle" fill={on ? '#FFFFFF' : '#7C6A52'}>
+                <Rect x={x} y={y} width={w} height={h} rx={h / 2} fill={fill} stroke={on ? colors.accent : rec ? colors.rest : '#C9B99D'} strokeWidth={0.6} />
+                {rec && (
+                  <Rect x={x - 3} y={y - 3} width={w + 6} height={h + 6} rx={h / 2 + 3} fill="none" stroke={colors.rest} strokeWidth={1.6} strokeDasharray="4 3" />
+                )}
+                <SvgText x={x + w / 2} y={y + h / 2 + 3.3} fontSize={9.5} fontWeight="700" fontFamily={SVG_FONT} textAnchor="middle" fill={on || rec ? '#FFFFFF' : '#7C6A52'}>
                   {`${hold.slopeDeg}°`}
                 </SvgText>
               </G>

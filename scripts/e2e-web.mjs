@@ -32,6 +32,18 @@ async function tapHold(b, holdId) {
 }
 const text = async () => page.locator('body').innerText();
 const shot = (name) => page.screenshot({ path: path.join(out, name) });
+// 오늘 기록 행: 기록 시간 글자 위치로 찾고, 그 자리에서 가로로 끈다
+const durations = () => page.getByText(/^(\d+\.\d초|\d+분 \d+초)$/);
+const swipeRow = async (n, dx) => {
+  const box = await durations().nth(n).boundingBox();
+  const y = box.y + box.height / 2;
+  await page.mouse.move(box.x + box.width / 2, y);
+  await page.mouse.down();
+  await page.mouse.move(box.x + box.width / 2 + dx, y, { steps: 12 });
+  await page.mouse.up();
+  await page.waitForTimeout(500);
+};
+const rowX = async (n) => (await durations().nth(n).boundingBox()).x;
 
 await page.goto(url);
 await page.evaluate(() => localStorage.clear());
@@ -214,11 +226,15 @@ await page.waitForTimeout(1000);
 await page.getByText('정지', { exact: true }).click();
 await page.waitForTimeout(300);
 const afterRecord = await todayCount();
-await page.getByText(/^\d+\.\d초$/).first().click();
-await page.getByText('삭제', { exact: true }).waitFor();
+const x0 = await rowX(0);
+await swipeRow(0, -30);
+const xSmall = await rowX(0);
+await swipeRow(0, -100);
+const xOpen = await rowX(0);
 await shot('09-delete.png');
+check('S9 왼쪽으로 조금 끌면 제자리, 반 넘게 끌면 오른쪽에서 삭제 버튼(80) 열림', Math.abs(xSmall - x0) < 1 && Math.abs(x0 - xOpen - 80) < 1 && (await page.getByText('삭제', { exact: true }).count()) === 1 && (await todayCount()) === afterRecord, `${x0} / ${xSmall} / ${xOpen}`);
 await page.getByText('삭제', { exact: true }).click();
-await page.waitForTimeout(300);
+await page.waitForTimeout(400);
 t = await text();
 check('S9 세트 삭제: 개수·지표 복원', before === fx.todayCount && afterRecord === before + 1 && (await todayCount()) === before && t.includes(A_STAT), `${before}→${afterRecord}→${await todayCount()}`);
 await page.reload();
@@ -505,6 +521,52 @@ await page.reload();
 await page.locator(`[aria-label="${b1.name}"]`).waitFor();
 await page.waitForTimeout(500);
 check('S15 이전 설정: 카운트다운 → 타이머 탭, 목표 유지, 인터벌 기본값', (await dial.count()) === 1 && (await clockOf()) === '12.0' && !(await text()).includes('카운트다운'));
+
+// S16 오늘 기록: 끝까지 밀면 바로 삭제, 탭하면 보드에 기록 홀드 표시(파랑 채움·점선 테두리, 지금 선택은 숨김), 보드 탭하면 원래 선택, 다른 보드 기록은 그 보드로 표시
+const recHoles = () => page.locator('rect[fill="url(#holeRec)"]').count();
+const dashed = () => page.locator('rect[stroke-dasharray]').count();
+const onHoles = () => page.locator('rect[fill="url(#holeOn)"]').count();
+const tapBlank = async (b) => {
+  const box = await page.locator(`[aria-label="${b.name}"]`).boundingBox();
+  await page.touchscreen.tap(box.x + box.width / 2, box.y + 4);
+  await page.waitForTimeout(200);
+};
+const storedSets = () => page.evaluate(() => JSON.parse(localStorage.getItem('hanglab.sets.v1')).length);
+await page.getByText('스톱워치', { exact: true }).click();
+const n0 = await todayCount();
+const s0 = await storedSets();
+await swipeRow(0, -330);
+check('S16 끝까지 밀면 버튼 누르지 않아도 바로 삭제', (await todayCount()) === n0 - 1 && (await storedSets()) === s0 - 1 && (await page.getByText('삭제', { exact: true }).count()) === 0, `${n0}→${await todayCount()}`);
+
+const ownOn = await onHoles();
+await durations().first().click();
+await page.waitForTimeout(200);
+const view1 = [await recHoles(), await dashed(), await onHoles(), await page.getByText('삭제', { exact: true }).count()];
+await shot('17-record-view.png');
+check('S16 기록 탭: 그 기록 홀드를 파랑·점선으로 표시, 지금 선택(주황)은 숨김, 삭제 버튼 없음', ownOn === 2 && view1.join(',') === '2,2,0,0', `선택 ${ownOn} / 기록 ${view1.join(',')}`);
+await tapBlank(b1);
+check('S16 보드 탭: 기록 표시 해제, 원래 선택 복귀', (await recHoles()) === 0 && (await onHoles()) === 2);
+await durations().first().click();
+await page.waitForTimeout(200);
+await durations().first().click();
+await page.waitForTimeout(200);
+check('S16 같은 기록 다시 탭하면 해제', (await recHoles()) === 0 && (await onHoles()) === 2);
+
+await page.getByText('Beastmaker 2000', { exact: true }).click();
+await tapHold(b2, 'bm2000-r2-02');
+await page.getByText('시작', { exact: true }).click();
+await page.waitForTimeout(300);
+await page.getByText('정지', { exact: true }).click();
+await page.waitForTimeout(300);
+await page.getByText('Beastmaker 1000', { exact: true }).click();
+await tapHold(b1, 'bm1000-r2-03');
+await durations().first().click();
+await page.waitForTimeout(300);
+const otherBoard = [await page.locator(`[aria-label="${b2.name}"]`).count(), await page.locator(`[aria-label="${b1.name}"]`).count(), await recHoles(), await onHoles()];
+await shot('18-record-other-board.png');
+await tapBlank(b2);
+const backBoard = [await page.locator(`[aria-label="${b1.name}"]`).count(), await onHoles(), await recHoles()];
+check('S16 다른 보드 기록: 그 보드로 표시 → 보드 탭하면 지금 보드·선택으로', otherBoard.join(',') === '1,0,2,0' && backBoard.join(',') === '1,2,0', `${otherBoard.join(',')} → ${backBoard.join(',')}`);
 
 check('콘솔 에러 없음', errors.length === 0, errors.slice(0, 3).join(' / '));
 fs.writeFileSync(path.join(out, 'results.json'), JSON.stringify(results, null, 2));
