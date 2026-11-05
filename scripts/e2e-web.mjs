@@ -416,6 +416,20 @@ const defaults = [await valueOf('운동'), await valueOf('휴식'), await valueO
 // 단위는 다이얼과 따로 고정: 끌어도 자리가 그대로이고 숫자보다 작다. 숫자는 얇은 굵기
 const unitBox = async (unit, n) => page.getByText(unit, { exact: true }).nth(n).boundingBox();
 const styleOf = async (loc) => loc.evaluate((n) => ({ size: parseFloat(getComputedStyle(n).fontSize), weight: getComputedStyle(n).fontWeight }));
+// 운동·휴식은 타이머 목표 시간 다이얼과 같은 눈금(눈금 색 line/textDim, 선택 위치 고정 주황 선 1개), 세트는 눈금 없이 숫자만
+const tickInfo = async (label) =>
+  page.locator(`[aria-label="${label}"]`).evaluate((root) => {
+    const nodes = [...root.querySelectorAll('*')];
+    const bg = (n) => getComputedStyle(n).backgroundColor;
+    const center = nodes.find((n) => bg(n) === 'rgb(255, 106, 31)');
+    return {
+      accent: nodes.filter((n) => bg(n) === 'rgb(255, 106, 31)').length,
+      ticks: nodes.filter((n) => ['rgb(42, 46, 52)', 'rgb(139, 144, 153)'].includes(bg(n))).length,
+      centerY: center ? Math.round(center.getBoundingClientRect().y) : null,
+    };
+  });
+const ticksBefore = [await tickInfo('운동'), await tickInfo('휴식'), await tickInfo('세트')];
+check('S14 눈금: 운동·휴식은 눈금+주황 선택 선, 세트는 숫자만', ticksBefore[0].accent === 1 && ticksBefore[0].ticks >= 5 && ticksBefore[1].accent === 1 && ticksBefore[1].ticks >= 5 && ticksBefore[2].accent === 0 && ticksBefore[2].ticks === 0, JSON.stringify(ticksBefore));
 const unitBefore = await unitBox('s', 0);
 const unitStyle = await styleOf(page.getByText('s', { exact: true }).first());
 const numberStyle = await styleOf(page.locator('[aria-label="운동"]').getByText('7', { exact: true }));
@@ -432,7 +446,8 @@ const chosen = [await valueOf('운동'), await valueOf('휴식'), await valueOf(
 const ivPrefs = await page.evaluate(() => JSON.parse(localStorage.getItem('hanglab.timer.v1')).interval);
 check('S14 세로 다이얼: 아래로 끌면 감소·위로 끌면 증가·끝에서 멈춤, 저장', chosen.join('/') === '5s/3s/2회' && restUp === '4s' && setsMin === '1회' && JSON.stringify(ivPrefs) === '{"workS":5,"restS":3,"sets":2}', `${chosen.join('/')} 휴식↑${restUp} 세트최소${setsMin} ${JSON.stringify(ivPrefs)}`);
 const unitAfter = await unitBox('s', 0);
-check('S14 단위는 다이얼과 같이 돌지 않음(끈 뒤에도 같은 자리)', unitBefore.x === unitAfter.x && unitBefore.y === unitAfter.y, `${unitBefore.y} → ${unitAfter.y}`);
+const centerAfter = (await tickInfo('운동')).centerY;
+check('S14 단위·주황 선택 선은 다이얼과 같이 돌지 않음(끈 뒤에도 같은 자리)', unitBefore.x === unitAfter.x && unitBefore.y === unitAfter.y && centerAfter === ticksBefore[0].centerY, `단위 ${unitBefore.y} → ${unitAfter.y}, 선 ${ticksBefore[0].centerY} → ${centerAfter}`);
 await page.locator('[aria-label="운동"]').scrollIntoViewIfNeeded();
 await shot('14-interval-setup.png');
 await page.locator('[aria-label="운동"]').screenshot({ path: path.join(out, '14b-interval-dial.png') });

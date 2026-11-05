@@ -22,7 +22,7 @@ type Props = {
   unit: string;
   values: number[];
   value: number;
-  major: (value: number) => boolean;
+  major?: (value: number) => boolean;
   disabled: boolean;
   onChange: (value: number) => void;
   onCommit: (value: number) => void;
@@ -30,14 +30,14 @@ type Props = {
 
 /**
  * 위아래로 끌어 값을 고르는 세로 다이얼. 가운데 칸이 현재 값이고, 위로 끌면 값이 커진다.
- * 숫자와 눈금은 함께 움직이고, 단위는 가운데 칸 옆에 고정된다.
+ * 숫자와 눈금은 함께 움직이고, 단위와 선택 위치의 주황 선은 고정된다(타이머 목표 시간 다이얼과 같은 눈금).
  *
  * Args:
  *   label: 다이얼 위 이름. 접근성 이름으로도 쓴다.
  *   unit: 가운데 칸 숫자 옆에 고정으로 붙는 단위.
  *   values: 고를 수 있는 값(오름차순).
  *   value: 현재 값. 목록에 없으면 가장 가까운 값에 놓인다.
- *   major: 긴 눈금으로 표시할 값인지.
+ *   major: 긴 눈금으로 표시할 값인지. 없으면 눈금 없이 숫자만 보인다.
  *   disabled: 조작 잠금 여부.
  *   onChange: 끄는 중 칸이 바뀔 때마다 호출된다.
  *   onCommit: 손을 뗐을 때 최종 값으로 호출된다.
@@ -113,13 +113,13 @@ export function VerticalDial({ label, unit, values, value, major, disabled, onCh
             });
             return (
               <Animated.View key={v} style={[styles.row, { top: i * ROW, opacity }]}>
-                {i > 0 && <View style={styles.tickMinor} />}
-                <View style={[styles.tick, major(v) && styles.tickMajor]} />
+                {major && <View style={[styles.tick, major(v) && styles.tickMajor]} />}
                 <Text style={styles.number}>{v}</Text>
               </Animated.View>
             );
           })}
         </Animated.View>
+        {major && <View pointerEvents="none" style={styles.center} />}
         <Text pointerEvents="none" style={styles.unit}>
           {unit}
         </Text>
@@ -128,8 +128,9 @@ export function VerticalDial({ label, unit, values, value, major, disabled, onCh
   );
 }
 
-const NUMBER_RIGHT = '37%';
-const UNIT_LEFT = '66%';
+const NUMBER_RIGHT = '31%';
+const UNIT_LEFT = '72%';
+const TICK_MID = 15;
 
 const styles = StyleSheet.create({
   root: { flex: 1, alignItems: 'stretch' },
@@ -149,22 +150,22 @@ const styles = StyleSheet.create({
   row: { position: 'absolute', left: 0, right: 0, height: ROW },
   tick: {
     position: 'absolute',
-    left: 6,
+    left: TICK_MID - 5,
     top: ROW / 2 - 1,
-    width: 8,
+    width: 10,
     height: 2,
     borderRadius: 1,
-    backgroundColor: colors.textDim,
+    backgroundColor: colors.line,
   },
-  tickMajor: { width: 12, backgroundColor: colors.text },
-  tickMinor: {
+  tickMajor: { left: TICK_MID - 8, width: 16, backgroundColor: colors.textDim },
+  center: {
     position: 'absolute',
-    left: 6,
-    top: -1,
-    width: 4,
+    left: TICK_MID - 11,
+    top: CENTER_TOP + ROW / 2 - 1,
+    width: 22,
     height: 2,
     borderRadius: 1,
-    backgroundColor: colors.textDim,
+    backgroundColor: colors.accent,
   },
   number: {
     position: 'absolute',

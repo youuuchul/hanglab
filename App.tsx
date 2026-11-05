@@ -62,9 +62,6 @@ function majorSecond(s: number): boolean {
   return s <= 180 ? s % 30 === 0 : s % 60 === 0;
 }
 
-function majorSet(n: number): boolean {
-  return n % 5 === 0;
-}
 
 function formatTime(epoch: number): string {
   const d = new Date(epoch);
@@ -356,7 +353,6 @@ function Main() {
                   unit="회"
                   values={SET_STEPS}
                   value={plan.sets}
-                  major={majorSet}
                   disabled={busy}
                   onChange={(v) => setPlan('sets', v, false)}
                   onCommit={(v) => setPlan('sets', v, true)}
