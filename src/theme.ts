@@ -8,4 +8,5 @@ export const colors = {
   accent: '#FF6A1F',
   accentDim: '#3A2216',
   danger: '#D93636',
+  rest: '#3D9BFF',
 };

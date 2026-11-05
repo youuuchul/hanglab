@@ -10,6 +10,7 @@ import { StatsSheet } from './src/StatsSheet';
 import {
   DEFAULT_TIMER_PREFS,
   HangSet,
+  IntervalPrefs,
   loadSelection,
   loadSets,
   loadTimerPrefs,
@@ -17,12 +18,22 @@ import {
   saveSets,
   saveTimerPrefs,
   TimerPrefs,
+  TimerTab,
 } from './src/storage';
 import { TARGET_STEPS, TargetDial } from './src/TargetDial';
 import { colors } from './src/theme';
-import { Phase, READY_MS, useHangTimer } from './src/useHangTimer';
+import { Phase, useHangTimer } from './src/useHangTimer';
+import { IntervalPhase, useIntervalTimer } from './src/useIntervalTimer';
+import { VerticalDial } from './src/VerticalDial';
 
-const PHASE_LABEL: Record<Phase, string> = { idle: '대기', ready: '준비', hang: '매달리기', rest: '휴식' };
+const PHASE_LABEL: Record<Phase, string> = { idle: '대기', hang: '매달리기', rest: '휴식' };
+const INTERVAL_LABEL: Record<IntervalPhase, string> = { ready: '준비', work: '운동', rest: '휴식' };
+const TABS: [TimerTab, string][] = [
+  ['stopwatch', '스톱워치'],
+  ['timer', '타이머'],
+  ['interval', '인터벌'],
+];
+const SET_STEPS = Array.from({ length: 30 }, (_, i) => i + 1);
 
 const TARGET_MIN_S = TARGET_STEPS[0];
 const TARGET_MAX_S = TARGET_STEPS[TARGET_STEPS.length - 1];
@@ -44,6 +55,10 @@ function formatElapsed(ms: number): string {
 function formatClock(ms: number): string {
   const total = Math.floor(ms / 1000);
   return `${Math.floor(total / 60)}:${String(total % 60).padStart(2, '0')}`;
+}
+
+function formatStep(s: number): string {
+  return s < 60 ? `${s}초` : formatClock(s * 1000);
 }
 
 function formatTime(epoch: number): string {
@@ -101,7 +116,9 @@ function Main() {
     if (loaded) saveSelection({ boardId, mode, holdId: primaryId });
   }, [loaded, boardId, mode, primaryId]);
 
-  const countdown = prefs.countdown;
+  const tab = prefs.tab;
+  const countdown = tab === 'timer';
+  const plan = prefs.interval;
   const selectedKey = selectedIds.length > 0 ? holdKey(boardId, mode, selectedIds) : null;
   const targetS = (selectedKey !== null ? prefs.targetsS[selectedKey] : undefined) ?? prefs.lastTargetS;
 
@@ -119,6 +136,10 @@ function Main() {
       (p) => ({ ...p, lastTargetS: value, targetsS: key === null ? p.targetsS : { ...p.targetsS, [key]: value } }),
       save,
     );
+  };
+
+  const setPlan = (key: keyof IntervalPrefs, value: number, save: boolean) => {
+    updatePrefs((p) => ({ ...p, interval: { ...p.interval, [key]: value } }), save);
   };
 
   const record = (durationMs: number, endedAt: number) => {
@@ -142,7 +163,8 @@ function Main() {
   };
 
   const timer = useHangTimer(record);
-  const busy = timer.phase === 'ready' || timer.phase === 'hang';
+  const interval = useIntervalTimer(record);
+  const busy = timer.phase === 'hang' || interval.running;
 
   const selectHold = (hold: Hold) => {
     if (busy) return;
@@ -196,13 +218,25 @@ function Main() {
   };
 
   let display = countdown ? formatRemaining(targetS * 1000) : formatSeconds(0);
-  if (timer.phase === 'ready') display = String(Math.max(1, Math.ceil((READY_MS - timer.elapsedMs) / 1000)));
-  else if (timer.phase === 'rest' && !countdown) display = formatClock(timer.elapsedMs);
+  if (timer.phase === 'rest' && !countdown) display = formatClock(timer.elapsedMs);
   else if (timer.phase === 'hang')
     display = timer.target === null ? formatElapsed(timer.elapsedMs) : formatRemaining(timer.target - timer.elapsedMs);
 
+  const intervalDisplay =
+    interval.phase === 'ready'
+      ? String(Math.max(1, Math.ceil(interval.remainingMs / 1000)))
+      : formatRemaining(interval.remainingMs);
+  const intervalColor = interval.phase === 'work' ? styles.work : interval.phase === 'rest' ? styles.restColor : null;
+
   const canStart = selectedIds.length > 0 && sets !== null;
-  const primaryLabel = busy ? (timer.phase === 'ready' ? '취소' : '정지') : '시작';
+  const primaryLabel = !busy ? '시작' : interval.phase === 'ready' ? '취소' : '정지';
+  const pressPrimary = () => {
+    if (interval.running) interval.stop();
+    else if (busy) timer.stop();
+    else if (tab === 'interval')
+      interval.start({ workMs: plan.workS * 1000, restMs: plan.restS * 1000, sets: plan.sets });
+    else timer.start(countdown ? targetS * 1000 : null);
+  };
   const boardWidth = Math.min(width - 24, 560);
 
   return (
@@ -262,57 +296,101 @@ function Main() {
       </View>
 
       <View style={styles.timer}>
-        <View style={styles.timerControls}>
-          <View style={styles.modeGroup}>
-            {[false, true].map((cd) => (
-              <Pressable
-                key={String(cd)}
-                disabled={busy}
-                onPress={() => updatePrefs((p) => ({ ...p, countdown: cd }), true)}
-                style={[styles.modeItem, countdown === cd && styles.modeOn]}
-              >
-                <Text style={[styles.modeText, countdown === cd && styles.modeTextOn]}>{cd ? '카운트다운' : '스톱워치'}</Text>
-              </Pressable>
-            ))}
-          </View>
-        </View>
-        <Text style={[styles.phase, timer.phase === 'hang' && styles.phaseHang]}>
-          {countdown && timer.phase === 'rest' ? `휴식 · ${formatClock(timer.elapsedMs)}` : PHASE_LABEL[timer.phase]}
-        </Text>
-        {editing !== null ? (
-          <View style={styles.editRow}>
-            <TextInput
-              accessibilityLabel="목표 시간 입력"
-              value={draft}
-              onChangeText={setDraft}
-              onSubmitEditing={finishEdit}
-              onBlur={finishEdit}
-              keyboardType="number-pad"
-              maxLength={3}
-              autoFocus
-              selectTextOnFocus
-              style={[styles.clock, styles.clockInput]}
-            />
-            <Pressable onPress={finishEdit} style={styles.doneButton}>
-              <Text style={styles.doneText}>완료</Text>
-            </Pressable>
-          </View>
+        {interval.running ? (
+          <>
+            <Text style={styles.setsLeft}>남은 {interval.setsLeft}세트</Text>
+            <Text style={[styles.phase, intervalColor]}>{interval.phase ? INTERVAL_LABEL[interval.phase] : ''}</Text>
+            <Text style={[styles.clock, intervalColor]}>{intervalDisplay}</Text>
+          </>
         ) : (
-          <Pressable disabled={!canEditTarget} onPress={tapClock}>
-            <Text style={[styles.clock, timer.phase === 'hang' && styles.clockHang]}>{display}</Text>
-          </Pressable>
-        )}
-        {countdown && (
-          <TargetDial
-            value={targetS}
-            disabled={!canEditTarget || editing !== null}
-            onChange={(v) => setTarget(selectedKey, v, false)}
-            onCommit={(v) => setTarget(selectedKey, v, true)}
-          />
+          <>
+            <View style={styles.timerControls}>
+              <View style={styles.modeGroup}>
+                {TABS.map(([key, name]) => (
+                  <Pressable
+                    key={key}
+                    disabled={busy}
+                    onPress={() => updatePrefs((p) => ({ ...p, tab: key }), true)}
+                    style={[styles.modeItem, tab === key && styles.modeOn]}
+                  >
+                    <Text style={[styles.modeText, tab === key && styles.modeTextOn]}>{name}</Text>
+                  </Pressable>
+                ))}
+              </View>
+            </View>
+            {tab === 'interval' ? (
+              <View style={styles.intervalDials}>
+                <VerticalDial
+                  label="운동"
+                  values={TARGET_STEPS}
+                  value={plan.workS}
+                  format={formatStep}
+                  disabled={busy}
+                  onChange={(v) => setPlan('workS', v, false)}
+                  onCommit={(v) => setPlan('workS', v, true)}
+                />
+                <VerticalDial
+                  label="휴식"
+                  values={TARGET_STEPS}
+                  value={plan.restS}
+                  format={formatStep}
+                  disabled={busy}
+                  onChange={(v) => setPlan('restS', v, false)}
+                  onCommit={(v) => setPlan('restS', v, true)}
+                />
+                <VerticalDial
+                  label="세트"
+                  values={SET_STEPS}
+                  value={plan.sets}
+                  format={String}
+                  disabled={busy}
+                  onChange={(v) => setPlan('sets', v, false)}
+                  onCommit={(v) => setPlan('sets', v, true)}
+                />
+              </View>
+            ) : (
+              <>
+                <Text style={[styles.phase, timer.phase === 'hang' && styles.phaseHang]}>
+                  {countdown && timer.phase === 'rest' ? `휴식 · ${formatClock(timer.elapsedMs)}` : PHASE_LABEL[timer.phase]}
+                </Text>
+                {editing !== null ? (
+                  <View style={styles.editRow}>
+                    <TextInput
+                      accessibilityLabel="목표 시간 입력"
+                      value={draft}
+                      onChangeText={setDraft}
+                      onSubmitEditing={finishEdit}
+                      onBlur={finishEdit}
+                      keyboardType="number-pad"
+                      maxLength={3}
+                      autoFocus
+                      selectTextOnFocus
+                      style={[styles.clock, styles.clockInput]}
+                    />
+                    <Pressable onPress={finishEdit} style={styles.doneButton}>
+                      <Text style={styles.doneText}>완료</Text>
+                    </Pressable>
+                  </View>
+                ) : (
+                  <Pressable disabled={!canEditTarget} onPress={tapClock}>
+                    <Text style={[styles.clock, timer.phase === 'hang' && styles.clockHang]}>{display}</Text>
+                  </Pressable>
+                )}
+                {countdown && (
+                  <TargetDial
+                    value={targetS}
+                    disabled={!canEditTarget || editing !== null}
+                    onChange={(v) => setTarget(selectedKey, v, false)}
+                    onCommit={(v) => setTarget(selectedKey, v, true)}
+                  />
+                )}
+              </>
+            )}
+          </>
         )}
         <Pressable
           disabled={(!busy && !canStart) || editing !== null}
-          onPress={busy ? timer.stop : () => timer.start(countdown ? targetS * 1000 : null)}
+          onPress={pressPrimary}
           style={[styles.primary, busy && styles.primaryStop, !busy && !canStart && styles.primaryDisabled]}
         >
           <Text style={styles.primaryText}>{primaryLabel}</Text>
@@ -421,6 +499,10 @@ const styles = StyleSheet.create({
     marginVertical: 4,
   },
   clockHang: { color: colors.accent },
+  work: { color: colors.accent },
+  restColor: { color: colors.rest },
+  setsLeft: { color: colors.textDim, fontSize: 13, fontWeight: '600', fontVariant: ['tabular-nums'], marginBottom: 6 },
+  intervalDials: { alignSelf: 'stretch', flexDirection: 'row', gap: 8 },
   primary: {
     alignSelf: 'stretch',
     marginTop: 8,

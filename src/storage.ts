@@ -35,23 +35,40 @@ export async function saveSets(sets: HangSet[]): Promise<void> {
   await AsyncStorage.setItem(KEY, JSON.stringify(sets));
 }
 
+export type TimerTab = 'stopwatch' | 'timer' | 'interval';
+
+export type IntervalPrefs = { workS: number; restS: number; sets: number };
+
 export type TimerPrefs = {
-  countdown: boolean;
+  tab: TimerTab;
   lastTargetS: number;
   targetsS: Record<string, number>;
+  interval: IntervalPrefs;
 };
 
-export const DEFAULT_TIMER_PREFS: TimerPrefs = { countdown: false, lastTargetS: 10, targetsS: {} };
+export const DEFAULT_TIMER_PREFS: TimerPrefs = {
+  tab: 'stopwatch',
+  lastTargetS: 10,
+  targetsS: {},
+  interval: { workS: 7, restS: 3, sets: 6 },
+};
 
 /**
- * 타이머 설정(카운트다운 모드, 마지막 목표 시간, 홀드별 목표 시간)을 읽는다.
+ * 타이머 설정(탭, 마지막 목표 시간, 홀드별 목표 시간, 인터벌 설정)을 읽는다.
+ * 탭 대신 카운트다운 여부만 저장하던 이전 형식은 스톱워치/타이머 탭으로 옮긴다.
  *
  * Returns:
- *   저장된 설정. 없으면 기본값.
+ *   저장된 설정. 없거나 빠진 항목은 기본값.
  */
 export async function loadTimerPrefs(): Promise<TimerPrefs> {
   const raw = await AsyncStorage.getItem(PREFS_KEY);
-  return raw === null ? DEFAULT_TIMER_PREFS : (JSON.parse(raw) as TimerPrefs);
+  if (raw === null) return DEFAULT_TIMER_PREFS;
+  const { countdown, ...saved } = JSON.parse(raw) as Partial<TimerPrefs> & { countdown?: boolean };
+  return {
+    ...DEFAULT_TIMER_PREFS,
+    ...saved,
+    tab: saved.tab ?? (countdown ? 'timer' : 'stopwatch'),
+  };
 }
 
 /**

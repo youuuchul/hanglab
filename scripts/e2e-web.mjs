@@ -65,16 +65,13 @@ await page.touchscreen.tap(vb.x + vb.width / 2, vb.y + 4);
 t = await text();
 check('S2 빈 곳 탭: 선택 유지', t.includes('가운데줄 · 3손가락 포켓 · 45mm'));
 
-// S3 타이머 → 세트 기록. 기록 = 시작 탭 3초 뒤부터 정지 탭까지. 클릭 전후 시각으로 허용 구간을 잡는다
+// S3 타이머 → 세트 기록. 기록 = 시작 탭부터 정지 탭까지(준비 카운트다운 없음). 클릭 전후 시각으로 허용 구간을 잡는다
 const tStart = Date.now();
 await page.getByText('시작', { exact: true }).click();
 const tStarted = Date.now();
 await page.waitForTimeout(300);
 t = await text();
-check('S3 준비 카운트다운', t.includes('준비') && /\n3\n/.test(t));
-await page.waitForTimeout(3000);
-t = await text();
-check('S3 매달리기 전환', t.includes('매달리기'));
+check('S3 시작 즉시 매달리기(3-2-1 없음)', t.includes('매달리기') && !t.includes('준비') && /\n0\.\d\n/.test(t));
 await shot('03-hang.png');
 await page.waitForTimeout(2000);
 const tStop = Date.now();
@@ -84,15 +81,15 @@ await page.waitForTimeout(300);
 t = await text();
 const m = t.match(/(\d+\.\d)초\n/);
 const sec = m ? Number(m[1]) : NaN;
-const lo = (tStop - tStarted - 3000) / 1000 - 0.05;
-const hi = (tStopped - tStart - 3000) / 1000 + 0.05;
+const lo = (tStop - tStarted) / 1000 - 0.05;
+const hi = (tStopped - tStart) / 1000 + 0.05;
 check('S3 세트 기록: 1세트, 실제 매달린 시간', t.includes('1세트') && sec >= lo && sec <= hi, `기록 ${sec}초, 허용 ${lo.toFixed(2)}~${hi.toFixed(2)}`);
 check('S3 휴식 전환', t.includes('휴식') && /\n0:0\d\n/.test(t));
 await shot('04-after-set.png');
 
 // 연속 동작: 정지 두 번 연타해도 1세트
 await page.getByText('시작', { exact: true }).click();
-await page.waitForTimeout(3400);
+await page.waitForTimeout(400);
 const stopBtn = page.getByText('정지', { exact: true });
 await stopBtn.dispatchEvent('click');
 await stopBtn.dispatchEvent('click').catch(() => {});
@@ -213,7 +210,7 @@ check('S8 닫기', (await dialog.count()) === 0);
 await tapHold(b1, 'bm1000-r2-03');
 const before = await todayCount();
 await page.getByText('시작', { exact: true }).click();
-await page.waitForTimeout(4000);
+await page.waitForTimeout(1000);
 await page.getByText('정지', { exact: true }).click();
 await page.waitForTimeout(300);
 const afterRecord = await todayCount();
@@ -245,7 +242,7 @@ await page.waitForTimeout(600);
 // S11 카운트다운: 홀드 없이도 조절, 시계 두 번 탭 입력(하한·상한·잘못된 입력), 0초 자동 기록, 다이얼, 홀드별 목표·마지막 목표·모드 저장, 매달리기 중 잠금, 중간 정지
 const dial = page.locator('[aria-label="목표 시간"]');
 const input = page.locator('[aria-label="목표 시간 입력"]');
-const clockOf = async () => (await text()).match(/(?:대기|휴식[^\n]*|매달리기|준비)\n([^\n]+)\n/)?.[1];
+const clockOf = async () => (await text()).match(/(?:대기|휴식[^\n]*|매달리기|준비|운동)\n([^\n]+)\n/)?.[1];
 const editTarget = async (value, capture) => {
   await page.getByText(await clockOf(), { exact: true }).first().dblclick();
   await input.fill(value);
@@ -265,7 +262,7 @@ const dragDial = async (dx) => {
 // 카운트다운 휴식 중에는 큰 숫자가 다음 목표, 작은 글씨가 휴식 경과
 const nextTarget = async () => Number(await clockOf());
 
-await page.getByText('카운트다운', { exact: true }).click();
+await page.getByText('타이머', { exact: true }).click();
 t = await text();
 check('S11 기본 목표 10초, 숫자는 시계에만', (await clockOf()) === '10.0' && !/\n10초\n/.test(t) && (await dial.count()) === 1);
 await editTarget('7');
@@ -286,11 +283,11 @@ await editTarget('2');
 check('S11 키보드 입력 2초', (await clockOf()) === '2.0');
 
 await page.getByText('시작', { exact: true }).click();
-await page.waitForTimeout(3500);
+await page.waitForTimeout(500);
 const remaining = Number(await clockOf());
-check('S11 남은 시간 감소', remaining > 0 && remaining < 2, `남은 ${remaining}`);
+check('S11 시작 즉시 남은 시간 감소(3-2-1 없음)', remaining > 0 && remaining < 2 && !(await text()).includes('준비'), `남은 ${remaining}`);
 await shot('11-countdown.png');
-await page.waitForTimeout(2500);
+await page.waitForTimeout(2000);
 const autoRows = await page.getByText(/^\d+\.\d초$/).allInnerTexts();
 t = await text();
 check('S11 0초에 자동 기록(정지 안 누름)', (await todayCount()) === 1 && autoRows[0] === '2.0초', `세트 ${autoRows.join(',')}`);
@@ -322,12 +319,12 @@ await page.locator(`[aria-label="${b1.name}"]`).waitFor();
 await page.waitForTimeout(500);
 await tapHold(b1, 'bm1000-r2-05');
 const prefs = await page.evaluate(() => JSON.parse(localStorage.getItem('hanglab.timer.v1')));
-check('S11 새로고침 후 모드·목표 유지(반대쪽 탭)', (await dial.count()) === 1 && (await clockOf()) === '12.0' && prefs.countdown === true && prefs.targetsS['beastmaker-1000|both|bm1000-r2-03,bm1000-r2-05'] === 12, JSON.stringify(prefs));
+check('S11 새로고침 후 모드·목표 유지(반대쪽 탭)', (await dial.count()) === 1 && (await clockOf()) === '12.0' && prefs.tab === 'timer' && prefs.targetsS['beastmaker-1000|both|bm1000-r2-03,bm1000-r2-05'] === 12, JSON.stringify(prefs));
 
 const cStart = Date.now();
 await page.getByText('시작', { exact: true }).click();
 const cStarted = Date.now();
-await page.waitForTimeout(3300);
+await page.waitForTimeout(300);
 await dragDial(-101);
 await page.waitForTimeout(400);
 const cStop = Date.now();
@@ -336,8 +333,8 @@ const cStopped = Date.now();
 await page.waitForTimeout(300);
 check('S11 매달리기 중 다이얼 잠금', (await nextTarget()) === 12, `다음 ${await nextTarget()}초`);
 const early = Number((await page.getByText(/^\d+\.\d초$/).first().innerText()).replace('초', ''));
-const elo = (cStop - cStarted - 3000) / 1000 - 0.05;
-const ehi = (cStopped - cStart - 3000) / 1000 + 0.05;
+const elo = (cStop - cStarted) / 1000 - 0.05;
+const ehi = (cStopped - cStart) / 1000 + 0.05;
 check('S11 목표 12초 중간 정지: 실제 시간 기록', (await todayCount()) === 2 && early >= elo && early <= ehi, `기록 ${early}초, 허용 ${elo.toFixed(2)}~${ehi.toFixed(2)}`);
 
 await page.getByText('스톱워치', { exact: true }).click();
@@ -354,7 +351,7 @@ await page.locator(`[aria-label="${b1.name}"]`).waitFor();
 await page.waitForTimeout(500);
 await tapHold(b1, 'bm1000-r2-03');
 await page.getByText('시작', { exact: true }).click();
-await page.waitForTimeout(3500);
+await page.waitForTimeout(300);
 await page.clock.fastForward('11:00');
 await page.waitForTimeout(300);
 const longClock = await clockOf();
@@ -363,17 +360,17 @@ await page.waitForTimeout(300);
 const longRow = await page.getByText(/^\d+분 \d+초$/).first().innerText();
 check('S12 스톱워치 11분: 분:초 표시, 기록', /^11:0\d$/.test(longClock) && /^11분 \d초$/.test(longRow), `${longClock} / ${longRow}`);
 
-await page.getByText('카운트다운', { exact: true }).click();
+await page.getByText('타이머', { exact: true }).click();
 await editTarget('600');
 const maxLabel = (await clockOf()) === '10:00';
 await page.getByText('시작', { exact: true }).click();
-await page.waitForTimeout(3500);
+await page.waitForTimeout(300);
 const maxRunning = await clockOf();
 await page.clock.fastForward('10:00');
 await page.waitForTimeout(300);
 const maxRows = await page.getByText(/^\d+분 \d+초$/).allInnerTexts();
 t = await text();
-check('S12 카운트다운 10분: 휴식 중 입력 → 10:00 시작 → 자동 기록', maxLabel && /^(9:5\d|10:00)$/.test(maxRunning) && maxRows[0] === '10분 0초' && (await clockOf()) === '10:00' && /휴식 · 0:0\d/.test(t), `${maxLabel} / ${maxRunning} / ${maxRows[0]}`);
+check('S12 타이머 10분: 휴식 중 입력 → 10:00 시작 → 자동 기록', maxLabel && /^(9:5\d|10:00)$/.test(maxRunning) && maxRows[0] === '10분 0초' && (await clockOf()) === '10:00' && /휴식 · 0:0\d/.test(t), `${maxLabel} / ${maxRunning} / ${maxRows[0]}`);
 
 await editTarget('60');
 await dragDial(-13);
@@ -385,6 +382,90 @@ t = await text();
 const at195 = await clockOf();
 check('S12 다이얼 간격: 60→65초, 180→195초', at65 === '1:05' && at195 === '3:15', `${at65} / ${at195}`);
 await shot('13-long.png');
+
+// S14 인터벌: 세로 다이얼 설정·저장, 처음에만 3-2-1, 운동/휴식 번갈아 감소·색 구분, 남은 세트, 운동마다 기록, 중간 정지, 백그라운드 복귀
+const ACCENT = 'rgb(255, 106, 31)';
+const REST = 'rgb(61, 155, 255)';
+const valueOf = async (label) => page.locator(`[aria-label="${label}"]`).getAttribute('aria-valuetext');
+const dragV = async (label, dy) => {
+  const box = await page.locator(`[aria-label="${label}"]`).boundingBox();
+  const x = box.x + box.width / 2;
+  await page.mouse.move(x, box.y + box.height / 2);
+  await page.mouse.down();
+  await page.mouse.move(x, box.y + box.height / 2 + dy, { steps: 12 });
+  await page.mouse.up();
+  await page.waitForTimeout(300);
+};
+const clockColor = async () => page.getByText(await clockOf(), { exact: true }).first().evaluate((n) => getComputedStyle(n).color);
+const phaseColor = async (label) => page.getByText(label, { exact: true }).first().evaluate((n) => getComputedStyle(n).color);
+
+await page.getByText('인터벌', { exact: true }).click();
+t = await text();
+const defaults = [await valueOf('운동'), await valueOf('휴식'), await valueOf('세트')];
+check('S14 인터벌 탭: 세로 다이얼 3개, 기본 7초·3초·6세트, 큰 시계 없음', defaults.join('/') === '7초/3초/6' && !t.includes('대기'), defaults.join('/'));
+await dragV('운동', 60);
+await dragV('휴식', -31);
+const restUp = await valueOf('휴식');
+await dragV('휴식', 31);
+await dragV('세트', 600);
+const setsMin = await valueOf('세트');
+await dragV('세트', -31);
+const chosen = [await valueOf('운동'), await valueOf('휴식'), await valueOf('세트')];
+const ivPrefs = await page.evaluate(() => JSON.parse(localStorage.getItem('hanglab.timer.v1')).interval);
+check('S14 세로 다이얼: 아래로 끌면 감소·위로 끌면 증가·끝에서 멈춤, 저장', chosen.join('/') === '5초/3초/2' && restUp === '4초' && setsMin === '1' && JSON.stringify(ivPrefs) === '{"workS":5,"restS":3,"sets":2}', `${chosen.join('/')} 휴식↑${restUp} 세트최소${setsMin} ${JSON.stringify(ivPrefs)}`);
+await shot('14-interval-setup.png');
+
+// 시계를 멈추고 정해진 만큼만 흘려 단계 경계를 확인한다. T=시작 시각, 운동 5초·휴식 3초·2세트 → 끝 T+3+13초
+const advance = async (ms) => {
+  await page.clock.runFor(ms);
+  await page.waitForTimeout(150);
+};
+await page.clock.pauseAt((await page.evaluate(() => Date.now())) + 1000);
+const ivBefore = await todayCount();
+await page.getByText('시작', { exact: true }).click();
+await advance(100);
+t = await text();
+check('S14 시작: 3-2-1 준비, 탭·다이얼 숨김, 남은 2세트', t.includes('준비') && /\n3\n/.test(t) && t.includes('남은 2세트') && !t.includes('스톱워치') && (await page.locator('[aria-label="운동"]').count()) === 0);
+await advance(3000 + 2400);
+t = await text();
+const work1 = [await clockOf(), await clockColor(), await phaseColor('운동')];
+check('S14 운동 1(T+5.5초): 운동 시간 감소, 주황, 남은 2세트', work1[0] === '2.5' && work1[1] === ACCENT && work1[2] === ACCENT && t.includes('남은 2세트'), work1.join(' / '));
+await shot('15-interval-work.png');
+await advance(4000);
+t = await text();
+const rest1 = [await clockOf(), await clockColor(), await phaseColor('휴식')];
+check('S14 휴식(T+9.5초): 휴식 시간 감소, 파랑, 남은 1세트, 운동 1회 기록', rest1[0] === '1.5' && rest1[1] === REST && rest1[2] === REST && t.includes('남은 1세트') && (await todayCount()) === ivBefore + 1, rest1.join(' / '));
+await shot('16-interval-rest.png');
+await advance(2500);
+t = await text();
+check('S14 운동 2(T+12초): 준비 없이 바로 운동, 남은 1세트', (await clockOf()) === '4.0' && t.includes('운동') && !t.includes('준비') && t.includes('남은 1세트'), await clockOf());
+await advance(4200);
+t = await text();
+const ivRows = (await page.getByText(/^\d+\.\d초$/).allInnerTexts()).slice(0, 2);
+check('S14 마지막 운동 뒤(T+16.2초) 휴식 없이 종료, 운동 2회 각 5.0초 기록', (await todayCount()) === ivBefore + 2 && ivRows.join(',') === '5.0초,5.0초' && t.includes('스톱워치') && !t.includes('남은'), `${ivRows.join(',')} / 세트 ${await todayCount()}`);
+
+await page.getByText('시작', { exact: true }).click();
+await advance(3000 + 1200);
+await page.getByText('정지', { exact: true }).click();
+await advance(100);
+t = await text();
+const ivStop = await page.getByText(/^\d+\.\d초$/).first().innerText();
+check('S14 운동 중 정지: 실제 시간 기록 후 종료', (await todayCount()) === ivBefore + 3 && ivStop === '1.2초' && t.includes('인터벌'), ivStop);
+
+await page.getByText('시작', { exact: true }).click();
+await advance(3000 + 2000);
+await page.clock.fastForward(20000);
+await advance(200);
+t = await text();
+check('S14 멈췄다 돌아와도 끝난 운동 모두 기록', (await todayCount()) === ivBefore + 5 && t.includes('스톱워치'), `세트 ${await todayCount()}`);
+await page.clock.resume();
+
+// S15 이전 형식(카운트다운 여부만 저장) 설정은 타이머 탭으로 옮긴다
+await page.evaluate(() => localStorage.setItem('hanglab.timer.v1', JSON.stringify({ countdown: true, lastTargetS: 12, targetsS: {} })));
+await page.reload();
+await page.locator(`[aria-label="${b1.name}"]`).waitFor();
+await page.waitForTimeout(500);
+check('S15 이전 설정: 카운트다운 → 타이머 탭, 목표 유지, 인터벌 기본값', (await dial.count()) === 1 && (await clockOf()) === '12.0' && !(await text()).includes('카운트다운'));
 
 check('콘솔 에러 없음', errors.length === 0, errors.slice(0, 3).join(' / '));
 fs.writeFileSync(path.join(out, 'results.json'), JSON.stringify(results, null, 2));
