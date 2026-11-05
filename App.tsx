@@ -57,8 +57,13 @@ function formatClock(ms: number): string {
   return `${Math.floor(total / 60)}:${String(total % 60).padStart(2, '0')}`;
 }
 
-function formatStep(s: number): string {
-  return s < 60 ? String(s) : formatClock(s * 1000);
+function majorSecond(s: number): boolean {
+  if (s < 60) return s % 5 === 0;
+  return s <= 180 ? s % 30 === 0 : s % 60 === 0;
+}
+
+function majorSet(n: number): boolean {
+  return n % 5 === 0;
 }
 
 function formatTime(epoch: number): string {
@@ -328,27 +333,30 @@ function Main() {
               <View style={styles.intervalDials}>
                 <VerticalDial
                   label="운동"
+                  unit="s"
                   values={TARGET_STEPS}
                   value={plan.workS}
-                  format={formatStep}
+                  major={majorSecond}
                   disabled={busy}
                   onChange={(v) => setPlan('workS', v, false)}
                   onCommit={(v) => setPlan('workS', v, true)}
                 />
                 <VerticalDial
                   label="휴식"
+                  unit="s"
                   values={TARGET_STEPS}
                   value={plan.restS}
-                  format={formatStep}
+                  major={majorSecond}
                   disabled={busy}
                   onChange={(v) => setPlan('restS', v, false)}
                   onCommit={(v) => setPlan('restS', v, true)}
                 />
                 <VerticalDial
                   label="세트"
+                  unit="회"
                   values={SET_STEPS}
                   value={plan.sets}
-                  format={String}
+                  major={majorSet}
                   disabled={busy}
                   onChange={(v) => setPlan('sets', v, false)}
                   onCommit={(v) => setPlan('sets', v, true)}

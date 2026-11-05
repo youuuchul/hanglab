@@ -413,7 +413,14 @@ const phaseColor = async (label) => page.getByText(label, { exact: true }).first
 await page.getByText('인터벌', { exact: true }).click();
 t = await text();
 const defaults = [await valueOf('운동'), await valueOf('휴식'), await valueOf('세트')];
-check('S14 인터벌 탭: 세로 다이얼 3개, 기본 7·3·6(단위 없이 숫자만), 큰 시계 없음', defaults.join('/') === '7/3/6' && !t.includes('대기') && !/\n\d+초\n\d+초\n/.test(t), defaults.join('/'));
+// 단위는 다이얼과 따로 고정: 끌어도 자리가 그대로이고 숫자보다 작다. 숫자는 얇은 굵기
+const unitBox = async (unit, n) => page.getByText(unit, { exact: true }).nth(n).boundingBox();
+const styleOf = async (loc) => loc.evaluate((n) => ({ size: parseFloat(getComputedStyle(n).fontSize), weight: getComputedStyle(n).fontWeight }));
+const unitBefore = await unitBox('s', 0);
+const unitStyle = await styleOf(page.getByText('s', { exact: true }).first());
+const numberStyle = await styleOf(page.locator('[aria-label="운동"]').getByText('7', { exact: true }));
+check('S14 인터벌 탭: 세로 다이얼 3개, 기본 7s·3s·6회, 큰 시계 없음', defaults.join('/') === '7s/3s/6회' && !t.includes('대기'), defaults.join('/'));
+check('S14 단위 s·회는 숫자보다 작고, 숫자는 얇은 굵기', (await page.getByText('s', { exact: true }).count()) === 2 && (await page.getByText('회', { exact: true }).count()) === 1 && unitStyle.size < numberStyle.size && Number(numberStyle.weight) <= 400, `${JSON.stringify(unitStyle)} / ${JSON.stringify(numberStyle)}`);
 await dragV('운동', 60);
 await dragV('휴식', -31);
 const restUp = await valueOf('휴식');
@@ -423,8 +430,12 @@ const setsMin = await valueOf('세트');
 await dragV('세트', -31);
 const chosen = [await valueOf('운동'), await valueOf('휴식'), await valueOf('세트')];
 const ivPrefs = await page.evaluate(() => JSON.parse(localStorage.getItem('hanglab.timer.v1')).interval);
-check('S14 세로 다이얼: 아래로 끌면 감소·위로 끌면 증가·끝에서 멈춤, 저장', chosen.join('/') === '5/3/2' && restUp === '4' && setsMin === '1' && JSON.stringify(ivPrefs) === '{"workS":5,"restS":3,"sets":2}', `${chosen.join('/')} 휴식↑${restUp} 세트최소${setsMin} ${JSON.stringify(ivPrefs)}`);
+check('S14 세로 다이얼: 아래로 끌면 감소·위로 끌면 증가·끝에서 멈춤, 저장', chosen.join('/') === '5s/3s/2회' && restUp === '4s' && setsMin === '1회' && JSON.stringify(ivPrefs) === '{"workS":5,"restS":3,"sets":2}', `${chosen.join('/')} 휴식↑${restUp} 세트최소${setsMin} ${JSON.stringify(ivPrefs)}`);
+const unitAfter = await unitBox('s', 0);
+check('S14 단위는 다이얼과 같이 돌지 않음(끈 뒤에도 같은 자리)', unitBefore.x === unitAfter.x && unitBefore.y === unitAfter.y, `${unitBefore.y} → ${unitAfter.y}`);
+await page.locator('[aria-label="운동"]').scrollIntoViewIfNeeded();
 await shot('14-interval-setup.png');
+await page.locator('[aria-label="운동"]').screenshot({ path: path.join(out, '14b-interval-dial.png') });
 
 // 시계를 멈추고 정해진 만큼만 흘려 단계 경계를 확인한다. T=시작 시각, 운동 5초·휴식 3초·2세트 → 끝 T+3+13초
 const advance = async (ms) => {

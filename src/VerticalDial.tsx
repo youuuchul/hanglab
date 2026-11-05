@@ -7,6 +7,7 @@ import { colors } from './theme';
 const ROW = 30;
 const VISIBLE = 5;
 const WINDOW = 4;
+const CENTER_TOP = ((VISIBLE - 1) / 2) * ROW;
 
 function nearestIndex(values: number[], value: number): number {
   let best = 0;
@@ -18,9 +19,10 @@ function nearestIndex(values: number[], value: number): number {
 
 type Props = {
   label: string;
+  unit: string;
   values: number[];
   value: number;
-  format: (value: number) => string;
+  major: (value: number) => boolean;
   disabled: boolean;
   onChange: (value: number) => void;
   onCommit: (value: number) => void;
@@ -28,17 +30,19 @@ type Props = {
 
 /**
  * 위아래로 끌어 값을 고르는 세로 다이얼. 가운데 칸이 현재 값이고, 위로 끌면 값이 커진다.
+ * 숫자와 눈금은 함께 움직이고, 단위는 가운데 칸 옆에 고정된다.
  *
  * Args:
  *   label: 다이얼 위 이름. 접근성 이름으로도 쓴다.
+ *   unit: 가운데 칸 숫자 옆에 고정으로 붙는 단위.
  *   values: 고를 수 있는 값(오름차순).
  *   value: 현재 값. 목록에 없으면 가장 가까운 값에 놓인다.
- *   format: 칸에 보일 문자열.
+ *   major: 긴 눈금으로 표시할 값인지.
  *   disabled: 조작 잠금 여부.
  *   onChange: 끄는 중 칸이 바뀔 때마다 호출된다.
  *   onCommit: 손을 뗐을 때 최종 값으로 호출된다.
  */
-export function VerticalDial({ label, values, value, format, disabled, onChange, onCommit }: Props) {
+export function VerticalDial({ label, unit, values, value, major, disabled, onChange, onCommit }: Props) {
   const [pos] = useState(() => new Animated.Value(0));
   const drag = useRef<{ y0: number; start: number; last: number } | null>(null);
   const index = nearestIndex(values, value);
@@ -73,7 +77,7 @@ export function VerticalDial({ label, values, value, format, disabled, onChange,
       <View
         accessibilityRole="adjustable"
         accessibilityLabel={label}
-        aria-valuetext={format(value)}
+        aria-valuetext={`${value}${unit}`}
         accessibilityActions={[{ name: 'increment' }, { name: 'decrement' }]}
         onAccessibilityAction={(e) => !disabled && step(e.nativeEvent.actionName === 'increment' ? 1 : -1)}
         onStartShouldSetResponder={() => !disabled}
@@ -108,16 +112,24 @@ export function VerticalDial({ label, values, value, format, disabled, onChange,
               extrapolate: 'clamp',
             });
             return (
-              <Animated.Text key={v} style={[styles.item, { top: i * ROW, opacity }]}>
-                {format(v)}
-              </Animated.Text>
+              <Animated.View key={v} style={[styles.row, { top: i * ROW, opacity }]}>
+                {i > 0 && <View style={styles.tickMinor} />}
+                <View style={[styles.tick, major(v) && styles.tickMajor]} />
+                <Text style={styles.number}>{v}</Text>
+              </Animated.View>
             );
           })}
         </Animated.View>
+        <Text pointerEvents="none" style={styles.unit}>
+          {unit}
+        </Text>
       </View>
     </View>
   );
 }
+
+const NUMBER_RIGHT = '37%';
+const UNIT_LEFT = '66%';
 
 const styles = StyleSheet.create({
   root: { flex: 1, alignItems: 'stretch' },
@@ -128,23 +140,54 @@ const styles = StyleSheet.create({
     position: 'absolute',
     left: 4,
     right: 4,
-    top: ((VISIBLE - 1) / 2) * ROW,
+    top: CENTER_TOP,
     height: ROW,
     borderRadius: 8,
     backgroundColor: colors.surfaceHigh,
   },
-  track: { position: 'absolute', left: 0, right: 0, top: ((VISIBLE - 1) / 2) * ROW },
-  item: {
+  track: { position: 'absolute', left: 0, right: 0, top: CENTER_TOP },
+  row: { position: 'absolute', left: 0, right: 0, height: ROW },
+  tick: {
+    position: 'absolute',
+    left: 6,
+    top: ROW / 2 - 1,
+    width: 8,
+    height: 2,
+    borderRadius: 1,
+    backgroundColor: colors.textDim,
+  },
+  tickMajor: { width: 12, backgroundColor: colors.text },
+  tickMinor: {
+    position: 'absolute',
+    left: 6,
+    top: -1,
+    width: 4,
+    height: 2,
+    borderRadius: 1,
+    backgroundColor: colors.textDim,
+  },
+  number: {
     position: 'absolute',
     left: 0,
-    right: 0,
+    right: NUMBER_RIGHT,
     height: ROW,
     lineHeight: ROW,
     color: colors.text,
-    fontSize: 20,
-    fontWeight: '700',
-    textAlign: 'center',
+    fontSize: 22,
+    fontWeight: '400',
+    textAlign: 'right',
     fontVariant: ['tabular-nums'],
+    userSelect: 'none',
+  },
+  unit: {
+    position: 'absolute',
+    left: UNIT_LEFT,
+    top: CENTER_TOP,
+    height: ROW,
+    lineHeight: ROW + 2,
+    color: colors.textDim,
+    fontSize: 13,
+    fontWeight: '500',
     userSelect: 'none',
   },
 });
