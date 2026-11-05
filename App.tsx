@@ -58,7 +58,7 @@ function formatClock(ms: number): string {
 }
 
 function formatStep(s: number): string {
-  return s < 60 ? `${s}초` : formatClock(s * 1000);
+  return s < 60 ? String(s) : formatClock(s * 1000);
 }
 
 function formatTime(epoch: number): string {
@@ -298,8 +298,14 @@ function Main() {
       <View style={styles.timer}>
         {interval.running ? (
           <>
-            <Text style={styles.setsLeft}>남은 {interval.setsLeft}세트</Text>
-            <Text style={[styles.phase, intervalColor]}>{interval.phase ? INTERVAL_LABEL[interval.phase] : ''}</Text>
+            <View style={styles.intervalHead}>
+              <Text style={[styles.intervalPhase, intervalColor]}>
+                {interval.phase ? INTERVAL_LABEL[interval.phase] : ''}
+              </Text>
+              <Text style={styles.intervalSet}>
+                세트 {interval.set}/{interval.sets}
+              </Text>
+            </View>
             <Text style={[styles.clock, intervalColor]}>{intervalDisplay}</Text>
           </>
         ) : (
@@ -501,7 +507,9 @@ const styles = StyleSheet.create({
   clockHang: { color: colors.accent },
   work: { color: colors.accent },
   restColor: { color: colors.rest },
-  setsLeft: { color: colors.textDim, fontSize: 13, fontWeight: '600', fontVariant: ['tabular-nums'], marginBottom: 6 },
+  intervalHead: { alignSelf: 'stretch', flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
+  intervalPhase: { color: colors.text, fontSize: 17, fontWeight: '700' },
+  intervalSet: { color: colors.textDim, fontSize: 15, fontWeight: '600', fontVariant: ['tabular-nums'] },
   intervalDials: { alignSelf: 'stretch', flexDirection: 'row', gap: 8 },
   primary: {
     alignSelf: 'stretch',

@@ -9,18 +9,18 @@ export type IntervalPhase = 'ready' | 'work' | 'rest';
 export type IntervalPlan = { workMs: number; restMs: number; sets: number };
 
 type Run = IntervalPlan & { startedAt: number; recorded: number };
-type Position = { phase: IntervalPhase; remainingMs: number; setsLeft: number; phaseStart: number };
+type Position = { phase: IntervalPhase; remainingMs: number; set: number; phaseStart: number };
 
 /**
  * 시작 시각부터의 경과로 현재 단계를 구한다. 마지막 운동 뒤에는 휴식 없이 끝난다.
  *
  * Returns:
- *   현재 단계·남은 ms·남은 세트 수(진행 중인 운동 포함)·단계 시작 시각. 끝났으면 null.
+ *   현재 단계·남은 ms·몇 번째 세트인지(1부터, 휴식은 방금 끝낸 세트)·단계 시작 시각. 끝났으면 null.
  */
 function locate(run: Run, now: number): Position | null {
   const elapsed = now - run.startedAt;
   if (elapsed < READY_MS) {
-    return { phase: 'ready', remainingMs: READY_MS - elapsed, setsLeft: run.sets, phaseStart: run.startedAt };
+    return { phase: 'ready', remainingMs: READY_MS - elapsed, set: 1, phaseStart: run.startedAt };
   }
   const w = elapsed - READY_MS;
   const cycle = run.workMs + run.restMs;
@@ -29,9 +29,9 @@ function locate(run: Run, now: number): Position | null {
   if (k >= run.sets || (k === run.sets - 1 && within >= run.workMs)) return null;
   const base = run.startedAt + READY_MS + k * cycle;
   if (within < run.workMs) {
-    return { phase: 'work', remainingMs: run.workMs - within, setsLeft: run.sets - k, phaseStart: base };
+    return { phase: 'work', remainingMs: run.workMs - within, set: k + 1, phaseStart: base };
   }
-  return { phase: 'rest', remainingMs: cycle - within, setsLeft: run.sets - k - 1, phaseStart: base + run.workMs };
+  return { phase: 'rest', remainingMs: cycle - within, set: k + 1, phaseStart: base + run.workMs };
 }
 
 function repEnd(run: Run, index: number): number {
@@ -51,7 +51,7 @@ function completedReps(run: Run, now: number): number {
  *   onRep: 운동 한 번이 끝날 때마다 운동 시간(ms)과 종료 시각을 받는다. 중간 정지면 실제 시간.
  *
  * Returns:
- *   진행 여부, 현재 단계, 단계 남은 ms, 남은 세트 수, 시작·정지 함수.
+ *   진행 여부, 현재 단계, 단계 남은 ms, 현재 세트 번호와 전체 세트 수, 시작·정지 함수.
  */
 export function useIntervalTimer(onRep: (durationMs: number, endedAt: number) => void) {
   const [run, setRun] = useState<Run | null>(null);
@@ -130,7 +130,8 @@ export function useIntervalTimer(onRep: (durationMs: number, endedAt: number) =>
     running,
     phase: pos?.phase ?? null,
     remainingMs: pos?.remainingMs ?? 0,
-    setsLeft: pos?.setsLeft ?? 0,
+    set: pos?.set ?? 0,
+    sets: run?.sets ?? 0,
     start,
     stop,
   };

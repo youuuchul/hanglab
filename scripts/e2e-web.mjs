@@ -383,7 +383,7 @@ const at195 = await clockOf();
 check('S12 다이얼 간격: 60→65초, 180→195초', at65 === '1:05' && at195 === '3:15', `${at65} / ${at195}`);
 await shot('13-long.png');
 
-// S14 인터벌: 세로 다이얼 설정·저장, 처음에만 3-2-1, 운동/휴식 번갈아 감소·색 구분, 남은 세트, 운동마다 기록, 중간 정지, 백그라운드 복귀
+// S14 인터벌: 세로 다이얼 설정·저장(숫자만), 처음에만 3-2-1, 운동/휴식 번갈아 감소·색 구분, 왼쪽 위 단계·오른쪽 위 세트 n/n, 운동마다 기록, 중간 정지, 백그라운드 복귀
 const ACCENT = 'rgb(255, 106, 31)';
 const REST = 'rgb(61, 155, 255)';
 const valueOf = async (label) => page.locator(`[aria-label="${label}"]`).getAttribute('aria-valuetext');
@@ -396,13 +396,24 @@ const dragV = async (label, dy) => {
   await page.mouse.up();
   await page.waitForTimeout(300);
 };
-const clockColor = async () => page.getByText(await clockOf(), { exact: true }).first().evaluate((n) => getComputedStyle(n).color);
+// 진행 화면 텍스트 순서: 단계\n세트 n/n\n큰 숫자
+const ivClock = async () => (await text()).match(/세트 \d+\/\d+\n([^\n]+)\n/)?.[1];
+const ivSet = async () => (await text()).match(/세트 \d+\/\d+/)?.[0];
+const clockColor = async () => page.getByText(await ivClock(), { exact: true }).first().evaluate((n) => getComputedStyle(n).color);
+// 단계는 큰 숫자 왼쪽 위, 세트는 오른쪽 위, 위쪽 가운데 제목 없음
+const cornerLayout = async (phase) => {
+  const p = await page.getByText(phase, { exact: true }).first().boundingBox();
+  const s = await page.getByText(/^세트 \d+\/\d+$/).boundingBox();
+  const c = await page.getByText(await ivClock(), { exact: true }).first().boundingBox();
+  const card = await page.getByText('정지', { exact: true }).boundingBox();
+  return p.x + p.width < c.x && s.x > c.x + c.width && p.y + p.height <= c.y && s.y + s.height <= c.y && p.x < card.x + 40 && s.x + s.width > card.x + card.width - 40;
+};
 const phaseColor = async (label) => page.getByText(label, { exact: true }).first().evaluate((n) => getComputedStyle(n).color);
 
 await page.getByText('인터벌', { exact: true }).click();
 t = await text();
 const defaults = [await valueOf('운동'), await valueOf('휴식'), await valueOf('세트')];
-check('S14 인터벌 탭: 세로 다이얼 3개, 기본 7초·3초·6세트, 큰 시계 없음', defaults.join('/') === '7초/3초/6' && !t.includes('대기'), defaults.join('/'));
+check('S14 인터벌 탭: 세로 다이얼 3개, 기본 7·3·6(단위 없이 숫자만), 큰 시계 없음', defaults.join('/') === '7/3/6' && !t.includes('대기') && !/\n\d+초\n\d+초\n/.test(t), defaults.join('/'));
 await dragV('운동', 60);
 await dragV('휴식', -31);
 const restUp = await valueOf('휴식');
@@ -412,7 +423,7 @@ const setsMin = await valueOf('세트');
 await dragV('세트', -31);
 const chosen = [await valueOf('운동'), await valueOf('휴식'), await valueOf('세트')];
 const ivPrefs = await page.evaluate(() => JSON.parse(localStorage.getItem('hanglab.timer.v1')).interval);
-check('S14 세로 다이얼: 아래로 끌면 감소·위로 끌면 증가·끝에서 멈춤, 저장', chosen.join('/') === '5초/3초/2' && restUp === '4초' && setsMin === '1' && JSON.stringify(ivPrefs) === '{"workS":5,"restS":3,"sets":2}', `${chosen.join('/')} 휴식↑${restUp} 세트최소${setsMin} ${JSON.stringify(ivPrefs)}`);
+check('S14 세로 다이얼: 아래로 끌면 감소·위로 끌면 증가·끝에서 멈춤, 저장', chosen.join('/') === '5/3/2' && restUp === '4' && setsMin === '1' && JSON.stringify(ivPrefs) === '{"workS":5,"restS":3,"sets":2}', `${chosen.join('/')} 휴식↑${restUp} 세트최소${setsMin} ${JSON.stringify(ivPrefs)}`);
 await shot('14-interval-setup.png');
 
 // 시계를 멈추고 정해진 만큼만 흘려 단계 경계를 확인한다. T=시작 시각, 운동 5초·휴식 3초·2세트 → 끝 T+3+13초
@@ -425,24 +436,26 @@ const ivBefore = await todayCount();
 await page.getByText('시작', { exact: true }).click();
 await advance(100);
 t = await text();
-check('S14 시작: 3-2-1 준비, 탭·다이얼 숨김, 남은 2세트', t.includes('준비') && /\n3\n/.test(t) && t.includes('남은 2세트') && !t.includes('스톱워치') && (await page.locator('[aria-label="운동"]').count()) === 0);
+check('S14 시작: 3-2-1 준비, 탭·다이얼 숨김, 세트 1/2', (await ivClock()) === '3' && t.includes('준비') && (await ivSet()) === '세트 1/2' && !t.includes('남은') && !t.includes('스톱워치') && (await page.locator('[aria-label="운동"]').count()) === 0, await ivSet());
 await advance(3000 + 2400);
 t = await text();
-const work1 = [await clockOf(), await clockColor(), await phaseColor('운동')];
-check('S14 운동 1(T+5.5초): 운동 시간 감소, 주황, 남은 2세트', work1[0] === '2.5' && work1[1] === ACCENT && work1[2] === ACCENT && t.includes('남은 2세트'), work1.join(' / '));
+const work1 = [await ivClock(), await clockColor(), await phaseColor('운동'), await ivSet()];
+const layout1 = await cornerLayout('운동');
+check('S14 운동 1(T+5.5초): 운동 시간 감소(숫자만), 주황, 세트 1/2', work1[0] === '2.5' && work1[1] === ACCENT && work1[2] === ACCENT && work1[3] === '세트 1/2', work1.join(' / '));
+check('S14 진행 화면 배치: 왼쪽 위 운동/휴식, 오른쪽 위 세트, 가운데 제목 없음', layout1 && !/남은 \d+세트/.test(t));
 await shot('15-interval-work.png');
 await advance(4000);
 t = await text();
-const rest1 = [await clockOf(), await clockColor(), await phaseColor('휴식')];
-check('S14 휴식(T+9.5초): 휴식 시간 감소, 파랑, 남은 1세트, 운동 1회 기록', rest1[0] === '1.5' && rest1[1] === REST && rest1[2] === REST && t.includes('남은 1세트') && (await todayCount()) === ivBefore + 1, rest1.join(' / '));
+const rest1 = [await ivClock(), await clockColor(), await phaseColor('휴식'), await ivSet()];
+check('S14 휴식(T+9.5초): 휴식 시간 감소, 파랑, 세트 1/2 유지, 운동 1회 기록', rest1[0] === '1.5' && rest1[1] === REST && rest1[2] === REST && rest1[3] === '세트 1/2' && (await cornerLayout('휴식')) && (await todayCount()) === ivBefore + 1, rest1.join(' / '));
 await shot('16-interval-rest.png');
 await advance(2500);
 t = await text();
-check('S14 운동 2(T+12초): 준비 없이 바로 운동, 남은 1세트', (await clockOf()) === '4.0' && t.includes('운동') && !t.includes('준비') && t.includes('남은 1세트'), await clockOf());
+check('S14 운동 2(T+12초): 준비 없이 바로 운동, 세트 2/2', (await ivClock()) === '4.0' && t.includes('운동') && !t.includes('준비') && (await ivSet()) === '세트 2/2', `${await ivClock()} ${await ivSet()}`);
 await advance(4200);
 t = await text();
 const ivRows = (await page.getByText(/^\d+\.\d초$/).allInnerTexts()).slice(0, 2);
-check('S14 마지막 운동 뒤(T+16.2초) 휴식 없이 종료, 운동 2회 각 5.0초 기록', (await todayCount()) === ivBefore + 2 && ivRows.join(',') === '5.0초,5.0초' && t.includes('스톱워치') && !t.includes('남은'), `${ivRows.join(',')} / 세트 ${await todayCount()}`);
+check('S14 마지막 운동 뒤(T+16.2초) 휴식 없이 종료, 운동 2회 각 5.0초 기록', (await todayCount()) === ivBefore + 2 && ivRows.join(',') === '5.0초,5.0초' && t.includes('스톱워치') && !/세트 \d+\/\d+/.test(t), `${ivRows.join(',')} / 세트 ${await todayCount()}`);
 
 await page.getByText('시작', { exact: true }).click();
 await advance(3000 + 1200);
